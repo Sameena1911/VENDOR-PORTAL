@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -6,26 +8,12 @@ const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const xml2js = require('xml2js');
 
-async function startServer() {
-  try {
-    app.listen(PORT, () => {
-      console.log('Server is running on port ' + PORT);
-      console.log('API URL: http://localhost:' + PORT);
-      console.log('Health check: http://localhost:' + PORT + '/api/health');
-      console.log('SAP Integration: ' + SAP_CONFIG.url);
-      console.log('SAP Vendor Portal Login:');
-      console.log('   Use your Vendor ID and Password from ZVP_LOGIN_TABLE');
-      console.log('   Example: Vendor ID format should match LIFNR from LFA1 table');
-    });
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
-  }
-}require('dotenv').config();
+// Import vendor profile service
+const { fetchVendorProfileFromSAP } = require('./services/vendorProfileService');
 
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 // SAP Configuration
@@ -192,6 +180,40 @@ app.get('/api/auth/profile', verifyToken, (req, res) => {
     vendorId: req.user.vendorId,
     loginTime: req.user.loginTime
   });
+});
+
+// Protected route - Get vendor profile from SAP
+app.get('/api/vendor/profile', verifyToken, async (req, res) => {
+  try {
+    const vendorId = req.user.vendorId;
+    
+    if (!vendorId) {
+      return res.status(400).json({
+        message: 'Vendor ID not found in token',
+        error: 'Missing vendor ID'
+      });
+    }
+
+    console.log(`Fetching profile for vendor: ${vendorId}`);
+
+    // Fetch vendor profile from SAP
+    const profileResult = await fetchVendorProfileFromSAP(vendorId);
+    
+    res.json({
+      message: 'Vendor profile retrieved successfully from SAP',
+      data: profileResult.data
+    });
+
+  } catch (error) {
+    console.error('Vendor profile fetch error:', error);
+    
+    // Return proper error response
+    res.status(500).json({
+      message: 'Failed to fetch vendor profile from SAP',
+      error: error.message,
+      details: 'Check server logs for more information'
+    });
+  }
 });
 
 // Protected route - Dashboard data

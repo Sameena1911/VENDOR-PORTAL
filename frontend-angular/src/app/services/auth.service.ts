@@ -1,28 +1,47 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private isLoggedInSubject = new BehaviorSubject<boolean>(this.hasValidToken());
+  private isLoggedInSubject = new BehaviorSubject<boolean>(false); // Force false initially
   public isLoggedIn$ = this.isLoggedInSubject.asObservable();
+  private apiUrl = 'http://localhost:3001/api';
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private http: HttpClient) {
+    // Clear all auth data on service initialization
+    this.clearAuthData();
+  }
 
   private hasValidToken(): boolean {
     const token = localStorage.getItem('token');
     
-    if (!token) {
+    if (!token || token === 'null' || token === 'undefined') {
+      localStorage.removeItem('token');
       return false;
     }
 
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      // Check if token has proper JWT format
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        localStorage.removeItem('token');
+        return false;
+      }
+
+      const payload = JSON.parse(atob(parts[1]));
       const currentTime = Math.floor(Date.now() / 1000);
       
-      if (payload.exp && payload.exp < currentTime) {
+      // Check if token has required fields
+      if (!payload.vendorId || !payload.exp) {
+        localStorage.removeItem('token');
+        return false;
+      }
+      
+      if (payload.exp < currentTime) {
         // Token is expired
         localStorage.removeItem('token');
         return false;
@@ -30,7 +49,8 @@ export class AuthService {
       
       return true;
     } catch (error) {
-      // Invalid token
+      // Invalid token format
+      console.error('Invalid token format:', error);
       localStorage.removeItem('token');
       return false;
     }
@@ -48,8 +68,18 @@ export class AuthService {
     this.router.navigate(['/login']);
   }
 
+  // Clear all authentication data
+  clearAuthData(): void {
+    localStorage.clear(); // Clear everything
+    sessionStorage.clear(); // Clear session storage too
+    this.isLoggedInSubject.next(false);
+    console.log('All authentication data cleared');
+  }
+
   isAuthenticated(): boolean {
-    return this.hasValidToken();
+    const isValid = this.hasValidToken();
+    this.isLoggedInSubject.next(isValid);
+    return isValid;
   }
 
   getToken(): string | null {
@@ -69,6 +99,27 @@ export class AuthService {
       };
     } catch (error) {
       return null;
+    }
+  }
+
+  // Get vendor profile from SAP backend
+  async getVendorProfile(): Promise<any> {
+    const token = this.getToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+
+    try {
+      const response = await this.http.get(`${this.apiUrl}/vendor/profile`, { headers }).toPromise();
+      return response;
+    } catch (error) {
+      console.error('Error fetching vendor profile:', error);
+      throw error;
     }
   }
 }

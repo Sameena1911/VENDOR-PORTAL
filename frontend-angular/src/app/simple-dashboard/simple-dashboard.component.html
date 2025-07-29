@@ -1,0 +1,104 @@
+<div class="dashboard-container">
+  <!-- Sidebar -->
+  <app-sidebar (menuItemSelected)="onMenuSelect($event)"></app-sidebar>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Enhanced Topbar with Logout -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h2>Vendor Dashboard</h2>
+        <span class="page-subtitle">{{ getPageSubtitle() }}</span>
+      </div>
+      
+      <div class="topbar-right">
+        <div class="user-section">
+          <div class="notification-btn" title="Notifications">
+            <span class="notification-icon">🔔</span>
+            <span class="notification-badge">3</span>
+          </div>
+          
+          <div class="user-info">
+            <span class="welcome-text">Welcome, {{ username }}!</span>
+          </div>
+          
+          <button class="logout-btn" (click)="logout()" title="Logout from Vendor Portal">
+            <span class="logout-icon">🚪</span>
+            <span class="logout-text">Logout</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Dynamic Content -->
+    <div class="dashboard-content">
+      <ng-container [ngSwitch]="selectedMenu">
+        <div *ngSwitchCase="'dashboard'" class="dashboard-section">
+          <div class="welcome-header">
+            <h3>Welcome to Vendor Portal</h3>
+            <p>Access all your vendor services and manage your business efficiently.</p>
+          </div>
+          
+          <!-- Summary Cards -->
+          <div class="summary-cards">
+            <div class="summary-card">
+              <div class="card-icon">📋</div>
+              <div class="card-content">
+                <h4>12</h4>
+                <p>Active RFQs</p>
+              </div>
+            </div>
+            
+            <div class="summary-card">
+              <div class="card-icon">📦</div>
+              <div class="card-content">
+                <h4>8</h4>
+                <p>Pending POs</p>
+              </div>
+            </div>
+            
+            <div class="summary-card">
+              <div class="card-icon">📥</div>
+              <div class="card-content">
+                <h4>15</h4>
+                <p>Goods Receipts</p>
+              </div>
+            </div>
+            
+            <div class="summary-card">
+              <div class="card-icon">💰</div>
+              <div class="card-content">
+                <h4>₹2.5L</h4>
+                <p>Outstanding</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngSwitchCase="'vendor-profile'" class="dashboard-section">
+          <app-vendor-profile></app-vendor-profile>
+        </div>
+
+        <div *ngSwitchCase="'rfqs'" class="dashboard-section">
+          <h3>Requests for Quotation</h3>
+          <!-- RFQ data -->
+        </div>
+
+        <div *ngSwitchCase="'pos'" class="dashboard-section">
+          <h3>Purchase Orders</h3>
+          <!-- PO content -->
+        </div>
+
+        <div *ngSwitchCase="'grs'" class="dashboard-section">
+          <h3>Goods Receipt</h3>
+          <!-- GR content -->
+        </div>
+
+        <div *ngSwitchCase="'financials'" class="dashboard-section">
+          <h3>Financial Summary</h3>
+          <!-- Financial data -->
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>

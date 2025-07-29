@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -77,7 +77,7 @@ import { AuthService } from '../services';
     }
   `]
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   loginData = {
     email: '',
     password: ''
@@ -88,6 +88,11 @@ export class LoginComponent {
   isLoading = false;
 
   constructor(private router: Router, private http: HttpClient, private authService: AuthService) {}
+
+  ngOnInit() {
+    // Clear any existing authentication data when login component loads
+    this.authService.clearAuthData();
+  }
 
   onSubmit() {
     this.isLoading = true;

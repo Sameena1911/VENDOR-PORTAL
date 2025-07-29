@@ -1,0 +1,112 @@
+<div class="vendor-profile-container">
+  <!-- Header Section -->
+  <div class="profile-header">
+    <div class="header-content">
+      <h2>Vendor Profile</h2>
+      <p class="header-subtitle">Complete vendor information from SAP system</p>
+    </div>
+    <button class="refresh-btn" (click)="refreshProfile()" [disabled]="loading">
+      <span class="refresh-icon">🔄</span>
+      <span>Refresh</span>
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Loading vendor profile from SAP...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-container">
+    <div class="error-icon">⚠️</div>
+    <h3>Failed to Load Profile</h3>
+    <p>{{ error }}</p>
+    <button class="retry-btn" (click)="refreshProfile()">
+      <span>Retry</span>
+    </button>
+  </div>
+
+  <!-- Profile Data -->
+  <div *ngIf="vendorProfile && !loading && !error" class="profile-content">
+    <!-- Vendor Info Card -->
+    <div class="profile-card">
+      <div class="card-header">
+        <h3>
+          <span class="card-icon">👤</span>
+          Vendor Information
+        </h3>
+        <span class="status-badge">Active</span>
+      </div>
+      
+      <div class="profile-details">
+        <div class="detail-group">
+          <div class="detail-item">
+            <label class="detail-label">Vendor ID (LIFNR)</label>
+            <div class="detail-value vendor-id">{{ vendorProfile.vendorId }}</div>
+          </div>
+          
+          <div class="detail-item">
+            <label class="detail-label">Vendor Name</label>
+            <div class="detail-value vendor-name">{{ vendorProfile.vendorName }}</div>
+          </div>
+        </div>
+
+        <div class="detail-group">
+          <div class="detail-item">
+            <label class="detail-label">Country Code (LAND1)</label>
+            <div class="detail-value">
+              <span class="country-code">{{ vendorProfile.country }}</span>
+              <span class="country-name">{{ getCountryName(vendorProfile.country) }}</span>
+            </div>
+          </div>
+          
+          <div class="detail-item">
+            <label class="detail-label">City (ORT01)</label>
+            <div class="detail-value">{{ vendorProfile.city }}</div>
+          </div>
+        </div>
+
+        <div class="detail-group">
+          <div class="detail-item">
+            <label class="detail-label">Status</label>
+            <div class="detail-value">
+              <span class="status-badge status-active">{{ vendorProfile.status || 'Active' }}</span>
+            </div>
+          </div>
+          
+          <div class="detail-item">
+            <label class="detail-label">Last Updated</label>
+            <div class="detail-value timestamp">{{ formatDate(vendorProfile.lastUpdated) }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Additional Info Card -->
+    <div class="info-card">
+      <h4>
+        <span class="info-icon">📋</span>
+        SAP Integration Details
+      </h4>
+      <div class="info-content">
+        <div class="info-item">
+          <span class="info-label">Data Source:</span>
+          <span class="info-value">SAP LFA1 Table</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Service:</span>
+          <span class="info-value">ZVP_PROFILE_SERVICE</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Function Module:</span>
+          <span class="info-value">ZVP_PROFILE_FM</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Connection Status:</span>
+          <span class="info-value status-connected">Connected</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

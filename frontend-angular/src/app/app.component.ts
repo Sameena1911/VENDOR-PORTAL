@@ -7,9 +7,9 @@ import { RouterOutlet } from '@angular/router';
   imports: [RouterOutlet],
   template: `
     <div class="app-container">
-      <header class="app-header">
+      <!-- <header class="app-header">
         <h1>Vendor Portal</h1>
-      </header>
+      </header> -->
       <main class="app-main">
         <router-outlet></router-outlet>
       </main>
