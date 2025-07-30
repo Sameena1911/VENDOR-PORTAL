@@ -8,6 +8,7 @@ export interface MenuItem {
   route?: string;
   action?: string;
   children?: MenuItem[];
+  isExpanded?: boolean;
 }
 
 @Component({
@@ -22,14 +23,30 @@ export interface MenuItem {
 
       <nav class="sidebar-nav">
         <ul class="nav-list">
-          <li *ngFor="let item of menuItems"
-              class="nav-item"
-              [class.active]="activeItem === item.label"
-              (click)="onItemClick(item)">
-            <div class="nav-link">
+          <li *ngFor="let item of menuItems" class="nav-item">
+            <div class="nav-link"
+                 [class.active]="activeItem === item.label"
+                 [class.has-children]="item.children && item.children.length > 0"
+                 (click)="onItemClick(item)">
               <i class="icon">{{ item.icon }}</i>
               <span class="nav-text">{{ item.label }}</span>
+              <i *ngIf="item.children && item.children.length > 0" 
+                 class="dropdown-icon"
+                 [class.expanded]="item.isExpanded">▼</i>
             </div>
+            
+            <!-- Dropdown Menu -->
+            <ul *ngIf="item.children && item.isExpanded" class="dropdown-menu">
+              <li *ngFor="let child of item.children"
+                  class="dropdown-item"
+                  [class.active]="activeItem === child.label"
+                  (click)="onChildClick(child, $event)">
+                <div class="dropdown-link">
+                  <i class="icon">{{ child.icon }}</i>
+                  <span class="nav-text">{{ child.label }}</span>
+                </div>
+              </li>
+            </ul>
           </li>
         </ul>
       </nav>
@@ -93,6 +110,66 @@ export interface MenuItem {
       padding: 15px 20px;
       text-decoration: none;
       color: white;
+      position: relative;
+    }
+
+    .nav-link.has-children {
+      justify-content: space-between;
+    }
+
+    .nav-link.active {
+      background: rgba(255, 255, 255, 0.2);
+      border-right: 4px solid white;
+    }
+
+    .dropdown-icon {
+      font-size: 12px;
+      transition: transform 0.3s ease;
+      margin-left: auto;
+    }
+
+    .dropdown-icon.expanded {
+      transform: rotate(180deg);
+    }
+
+    .dropdown-menu {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      background: rgba(0, 0, 0, 0.1);
+      animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        max-height: 0;
+      }
+      to {
+        opacity: 1;
+        max-height: 200px;
+      }
+    }
+
+    .dropdown-item {
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .dropdown-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .dropdown-item.active {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .dropdown-link {
+      display: flex;
+      align-items: center;
+      padding: 12px 20px 12px 50px;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 13px;
     }
 
     .icon {
@@ -132,15 +209,53 @@ export class SidebarComponent {
     { label: 'RFQs', icon: '📋', action: 'rfqs' },
     { label: 'Purchase Orders', icon: '📦', action: 'pos' },
     { label: 'Goods Receipt', icon: '📥', action: 'grs' },
-    { label: 'Financials', icon: '💰', action: 'financials' }
+    { 
+      label: 'Financials', 
+      icon: '💰', 
+      action: 'financials',
+      isExpanded: false,
+      children: [
+        { label: 'Invoice', icon: '📄', action: 'invoice' },
+        { label: 'Payment and Aging', icon: '⏰', action: 'payment-aging' },
+        { label: 'Credit and Debit Memo', icon: '📝', action: 'credit-debit-memo' }
+      ]
+    }
   ];
 
   constructor(private router: Router) {}
 
   onItemClick(item: MenuItem): void {
-    this.activeItem = item.label;
-    if (item.action) {
-      this.menuItemSelected.emit(item.action);
+    if (item.children && item.children.length > 0) {
+      // Toggle dropdown for items with children
+      item.isExpanded = !item.isExpanded;
+      
+      // Close other dropdowns
+      this.menuItems.forEach(menuItem => {
+        if (menuItem !== item && menuItem.children) {
+          menuItem.isExpanded = false;
+        }
+      });
+    } else {
+      // Handle regular menu items
+      this.activeItem = item.label;
+      if (item.action) {
+        this.menuItemSelected.emit(item.action);
+      }
+      
+      // Close all dropdowns when selecting a non-dropdown item
+      this.menuItems.forEach(menuItem => {
+        if (menuItem.children) {
+          menuItem.isExpanded = false;
+        }
+      });
+    }
+  }
+
+  onChildClick(child: MenuItem, event: Event): void {
+    event.stopPropagation(); // Prevent parent click
+    this.activeItem = child.label;
+    if (child.action) {
+      this.menuItemSelected.emit(child.action);
     }
   }
 }

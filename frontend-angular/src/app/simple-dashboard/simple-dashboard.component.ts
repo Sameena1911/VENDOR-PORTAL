@@ -3,12 +3,14 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { SidebarComponent } from '../components/sidebar/sidebar.component';
 import { VendorProfileComponent } from '../vendor-profile/vendor-profile.component';
+import { PaymentAgingReportsComponent } from '../payment-aging-reports/payment-aging-reports.component';
+import { CreditDebitMemoComponent } from '../credit-debit-memo/credit-debit-memo.component';
 import { AuthService } from '../services';
 
 @Component({
   selector: 'app-simple-dashboard',
   standalone: true,
-  imports: [CommonModule, SidebarComponent, VendorProfileComponent],
+  imports: [CommonModule, SidebarComponent, VendorProfileComponent, PaymentAgingReportsComponent, CreditDebitMemoComponent],
   templateUrl: './simple-dashboard.component.html',
   styleUrls: ['./simple-dashboard.component.css']
 })
@@ -26,7 +28,7 @@ export class SimpleDashboardComponent implements OnInit {
 
   ngOnInit() {
     const userInfo = this.authService.getUserInfo();
-    this.username = userInfo?.vendorId || 'VENDOR001';
+    this.username = userInfo?.vendorId || '0000100000';
   }
 
   onMenuSelect(action: string) {
@@ -41,6 +43,9 @@ export class SimpleDashboardComponent implements OnInit {
       case 'pos': return 'Purchase Order Tracking';
       case 'grs': return 'Goods Receipt Processing';
       case 'financials': return 'Financial Reports and Analysis';
+      case 'invoice': return 'Invoice Management';
+      case 'payment-aging': return 'Payment and Aging Reports';
+      case 'credit-debit-memo': return 'Credit and Debit Memo Management';
       default: return 'Vendor Portal Services';
     }
   }

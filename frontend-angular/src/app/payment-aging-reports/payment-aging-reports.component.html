@@ -1,0 +1,186 @@
+<div class="payment-aging-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="title-row">
+      <h1 class="page-title">Payment Aging Reports</h1>
+      <button class="refresh-btn" (click)="refreshData()" [disabled]="loading">
+        <i class="refresh-icon">↻</i>
+        Refresh Data
+      </button>
+    </div>
+    <p class="subtitle">Track vendor payment aging and outstanding amounts from SAP</p>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Loading payment aging data from SAP...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-container">
+    <div class="error-message">
+      <i class="error-icon">⚠</i>
+      <span>{{ error }}</span>
+    </div>
+    <button class="retry-btn" (click)="refreshData()">Try Again</button>
+  </div>
+
+  <!-- Data Display -->
+  <div *ngIf="!loading && !error" class="data-container">
+    
+    <!-- Summary Cards -->
+    <div *ngIf="summary" class="summary-section">
+      <h2 class="section-title">Payment Aging Summary</h2>
+      <div class="summary-cards">
+        <div class="summary-card current">
+          <div class="card-header">
+            <h3>Current</h3>
+            <span class="card-badge current-badge">{{ summary.current.count }}</span>
+          </div>
+          <div class="card-amount">{{ formatCurrency(summary.current.amount) }}</div>
+        </div>
+        
+        <div class="summary-card days30">
+          <div class="card-header">
+            <h3>1-30 Days</h3>
+            <span class="card-badge days30-badge">{{ summary.days30.count }}</span>
+          </div>
+          <div class="card-amount">{{ formatCurrency(summary.days30.amount) }}</div>
+        </div>
+        
+        <div class="summary-card days60">
+          <div class="card-header">
+            <h3>31-60 Days</h3>
+            <span class="card-badge days60-badge">{{ summary.days60.count }}</span>
+          </div>
+          <div class="card-amount">{{ formatCurrency(summary.days60.amount) }}</div>
+        </div>
+        
+        <div class="summary-card days90">
+          <div class="card-header">
+            <h3>61-90 Days</h3>
+            <span class="card-badge days90-badge">{{ summary.days90.count }}</span>
+          </div>
+          <div class="card-amount">{{ formatCurrency(summary.days90.amount) }}</div>
+        </div>
+        
+        <div class="summary-card overdue">
+          <div class="card-header">
+            <h3>90+ Days</h3>
+            <span class="card-badge overdue-badge">{{ summary.overdue.count }}</span>
+          </div>
+          <div class="card-amount">{{ formatCurrency(summary.overdue.amount) }}</div>
+        </div>
+        
+        <div class="summary-card total">
+          <div class="card-header">
+            <h3>Total Outstanding</h3>
+            <span class="card-badge total-badge">{{ summary.total.count }}</span>
+          </div>
+          <div class="card-amount">{{ formatCurrency(summary.total.amount) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Buttons -->
+    <div class="filter-section">
+      <h2 class="section-title">Payment Details</h2>
+      <div class="filter-buttons">
+        <button 
+          class="filter-btn" 
+          [class.active]="selectedFilter === 'all'"
+          (click)="setFilter('all')">
+          All Records
+        </button>
+        <button 
+          class="filter-btn" 
+          [class.active]="selectedFilter === 'current'"
+          (click)="setFilter('current')">
+          Current
+        </button>
+        <button 
+          class="filter-btn" 
+          [class.active]="selectedFilter === '30days'"
+          (click)="setFilter('30days')">
+          1-30 Days
+        </button>
+        <button 
+          class="filter-btn" 
+          [class.active]="selectedFilter === '60days'"
+          (click)="setFilter('60days')">
+          31-60 Days
+        </button>
+        <button 
+          class="filter-btn" 
+          [class.active]="selectedFilter === '90days'"
+          (click)="setFilter('90days')">
+          61-90 Days
+        </button>
+        <button 
+          class="filter-btn" 
+          [class.active]="selectedFilter === 'overdue'"
+          (click)="setFilter('overdue')">
+          90+ Days Overdue
+        </button>
+      </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-section">
+      <div class="table-info">
+        <span class="record-count">Showing {{ getFilteredData().length }} of {{ paymentData.length }} records</span>
+      </div>
+      
+      <div class="table-container" *ngIf="getFilteredData().length > 0; else noDataTemplate">
+        <table class="payment-table">
+          <thead>
+            <tr>
+              <th>Vendor ID</th>
+              <th>Document Number</th>
+              <th>Posting Date</th>
+              <th>Document Date</th>
+              <th>Currency</th>
+              <th>Amount</th>
+              <th>Due Date</th>
+              <th>Aging Days</th>
+              <th>Status</th>
+              <th>Payment Terms</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of getFilteredData(); trackBy: trackByDocumentNumber" 
+                class="table-row">
+              <td class="vendor-id">{{ item.vendorId }}</td>
+              <td class="document-number">{{ item.documentNumber }}</td>
+              <td class="posting-date">{{ item.postingDate | date:'dd/MM/yyyy' }}</td>
+              <td class="document-date">{{ item.documentDate | date:'dd/MM/yyyy' }}</td>
+              <td class="currency">{{ item.currency }}</td>
+              <td class="amount">{{ formatCurrency(item.amount, item.currency) }}</td>
+              <td class="due-date">{{ item.dueDate | date:'dd/MM/yyyy' }}</td>
+              <td class="aging-days" [class]="getStatusClass(item.status)">
+                {{ item.agingDays }} days
+              </td>
+              <td class="status">
+                <span class="status-badge" [class]="getStatusClass(item.status)">
+                  {{ item.status }}
+                </span>
+              </td>
+              <td class="payment-terms">{{ item.paymentTerms }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- No Data Template -->
+      <ng-template #noDataTemplate>
+        <div class="no-data-container">
+          <div class="no-data-icon">📊</div>
+          <h3>No Payment Data Found</h3>
+          <p>No payment records match the selected filter criteria.</p>
+          <button class="refresh-btn" (click)="setFilter('all')">Show All Records</button>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</div>

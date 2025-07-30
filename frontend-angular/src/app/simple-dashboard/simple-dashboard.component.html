@@ -98,6 +98,47 @@
           <h3>Financial Summary</h3>
           <!-- Financial data -->
         </div>
+
+        <div *ngSwitchCase="'invoice'" class="dashboard-section">
+          <div class="section-header">
+            <h3>📄 Invoice Management</h3>
+            <p>Manage and track your invoices with SAP integration</p>
+          </div>
+          
+          <div class="content-cards">
+            <div class="info-card">
+              <div class="card-header">
+                <h4>Recent Invoices</h4>
+                <span class="status-badge pending">5 Pending</span>
+              </div>
+              <div class="card-body">
+                <div class="invoice-item">
+                  <span class="invoice-no">INV-2025-001</span>
+                  <span class="amount">₹1,25,000</span>
+                  <span class="status paid">Paid</span>
+                </div>
+                <div class="invoice-item">
+                  <span class="invoice-no">INV-2025-002</span>
+                  <span class="amount">₹85,000</span>
+                  <span class="status pending">Pending</span>
+                </div>
+                <div class="invoice-item">
+                  <span class="invoice-no">INV-2025-003</span>
+                  <span class="amount">₹95,500</span>
+                  <span class="status processing">Processing</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngSwitchCase="'payment-aging'" class="dashboard-section">
+          <app-payment-aging-reports></app-payment-aging-reports>
+        </div>
+
+        <div *ngSwitchCase="'credit-debit-memo'" class="dashboard-section">
+          <app-credit-debit-memo></app-credit-debit-memo>
+        </div>
       </ng-container>
     </div>
   </div>

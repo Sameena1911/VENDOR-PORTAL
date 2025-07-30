@@ -1,5 +1,3 @@
-require('dotenv').config();
-
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -7,17 +5,10 @@ const morgan = require('morgan');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const xml2js = require('xml2js');
-
-// Import vendor profile service
-const { fetchVendorProfileFromSAP } = require('./services/vendorProfileService');
-// Import payment aging service
-const { fetchPaymentAgingFromSAP } = require('./services/paymentAgingService');
-// Import credit debit memo service
-const { fetchCreditDebitMemoFromSAP } = require('./services/creditDebitMemoService');
-
+require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 // SAP Configuration
@@ -32,7 +23,7 @@ const SAP_CONFIG = {
 app.use(helmet());
 app.use(morgan('combined'));
 app.use(cors({
-  origin: '*', // Angular dev server
+  origin: 'http://localhost:4200', // Angular dev server
   credentials: true
 }));
 app.use(express.json());
@@ -142,27 +133,12 @@ app.post('/api/auth/login', async (req, res) => {
       });
     }
 
-    // Map login credentials to LIFNR vendor ID
-    // In production, this would be fetched from a database
-    const vendorMapping = {
-      'k901705': '0000100000',  // Your SAP user maps to your LIFNR vendor ID
-      'vendor@test.com': '0000100000', // Alternative login
-      'VENDOR001': '0000100000', // Alternative vendor ID
-      '0000100000': '0000100000' // Direct LIFNR login
-    };
-
-    const actualVendorId = vendorMapping[vendorId] || vendorId;
-    console.log(`Login attempt: ${vendorId} -> LIFNR: ${actualVendorId}`);
-
-    // For testing purposes, if vendorId is 0000100000 and password is 123, allow login
-    if (actualVendorId === '0000100000' && password === '123') {
-      console.log('✅ Using test credentials for vendor 0000100000');
-      
-      // Generate JWT token for successful authentication
+    // For testing - temporarily bypass SAP and accept any credentials
+    // TODO: Remove this when SAP integration is working
+    if (vendorId && password) {
       const token = jwt.sign(
         { 
-          vendorId: actualVendorId,  // Store the actual LIFNR vendor ID
-          loginUser: vendorId,       // Store the login user for reference
+          vendorId: vendorId,
           loginTime: new Date().toISOString()
         },
         JWT_SECRET,
@@ -170,18 +146,18 @@ app.post('/api/auth/login', async (req, res) => {
       );
 
       return res.json({
-        message: 'Login successful',
+        message: 'Login successful (test mode)',
         token: token,
         user: {
-          vendorId: actualVendorId,
-          loginUser: vendorId,
+          vendorId: vendorId,
           loginTime: new Date().toISOString()
         }
       });
     }
 
-    // Authenticate with SAP for other credentials
-    const sapResult = await authenticateWithSAP(actualVendorId, password);
+    // SAP Authentication (commented out for now)
+    /*
+    const sapResult = await authenticateWithSAP(vendorId, password);
     
     if (!sapResult.success) {
       return res.status(401).json({ 
@@ -192,8 +168,7 @@ app.post('/api/auth/login', async (req, res) => {
     // Generate JWT token for successful authentication
     const token = jwt.sign(
       { 
-        vendorId: actualVendorId,  // Store the actual LIFNR vendor ID
-        loginUser: vendorId,       // Store the login user for reference
+        vendorId: vendorId,
         loginTime: new Date().toISOString()
       },
       JWT_SECRET,
@@ -204,11 +179,11 @@ app.post('/api/auth/login', async (req, res) => {
       message: 'Login successful',
       token: token,
       user: {
-        vendorId: actualVendorId,
-        loginUser: vendorId,
+        vendorId: vendorId,
         loginTime: new Date().toISOString()
       }
     });
+    */
 
   } catch (error) {
     console.error('Login error:', error);
@@ -224,128 +199,6 @@ app.get('/api/auth/profile', verifyToken, (req, res) => {
     vendorId: req.user.vendorId,
     loginTime: req.user.loginTime
   });
-});
-
-// Protected route - Get vendor profile from SAP
-app.get('/api/vendor/profile', verifyToken, async (req, res) => {
-  try {
-    const vendorId = req.user.vendorId;
-    
-    if (!vendorId) {
-      return res.status(400).json({
-        message: 'Vendor ID not found in token',
-        error: 'Missing vendor ID'
-      });
-    }
-
-    console.log(`Fetching profile for vendor: ${vendorId}`);
-
-    // Fetch vendor profile from SAP
-    const profileResult = await fetchVendorProfileFromSAP(vendorId);
-    
-    res.json({
-      message: 'Vendor profile retrieved successfully from SAP',
-      data: profileResult.data
-    });
-
-  } catch (error) {
-    console.error('Vendor profile fetch error:', error);
-    
-    // Return proper error response
-    res.status(500).json({
-      message: 'Failed to fetch vendor profile from SAP',
-      error: error.message,
-      details: 'Check server logs for more information'
-    });
-  }
-});
-
-// Protected route - Get payment and aging data from SAP
-app.get('/api/vendor/payment-aging', verifyToken, async (req, res) => {
-  try {
-    const vendorId = req.user.vendorId;
-    
-    if (!vendorId) {
-      return res.status(400).json({
-        message: 'Vendor ID not found in token',
-        error: 'Missing vendor ID'
-      });
-    }
-
-    console.log(`Fetching payment aging data for vendor: ${vendorId}`);
-
-    // Fetch payment aging data from SAP
-    const paymentAgingResult = await fetchPaymentAgingFromSAP(vendorId);
-    
-    if (paymentAgingResult.success) {
-      res.json({
-        message: 'Payment aging data retrieved successfully from SAP',
-        data: paymentAgingResult.data,
-        summary: paymentAgingResult.summary,
-        totalRecords: paymentAgingResult.totalRecords
-      });
-    } else {
-      res.status(404).json({
-        message: paymentAgingResult.message || 'No payment aging data found',
-        data: []
-      });
-    }
-
-  } catch (error) {
-    console.error('Payment aging fetch error:', error);
-    
-    // Return proper error response
-    res.status(500).json({
-      message: 'Failed to fetch payment aging data from SAP',
-      error: error.message,
-      details: 'Check server logs for more information'
-    });
-  }
-});
-
-// Protected route - Get credit and debit memo data from SAP
-app.get('/api/vendor/credit-debit-memo', verifyToken, async (req, res) => {
-  try {
-    const vendorId = req.user.vendorId;
-    
-    if (!vendorId) {
-      return res.status(400).json({
-        message: 'Vendor ID not found in token',
-        error: 'Missing vendor ID'
-      });
-    }
-
-    console.log(`Fetching credit and debit memo data for vendor: ${vendorId}`);
-
-    // Fetch credit and debit memo data from SAP
-    const memoResult = await fetchCreditDebitMemoFromSAP(vendorId);
-    
-    if (memoResult.success) {
-      res.json({
-        message: 'Credit and debit memo data retrieved successfully from SAP',
-        debitMemos: memoResult.debitMemos,
-        creditMemos: memoResult.creditMemos,
-        summary: memoResult.summary,
-        totalRecords: memoResult.totalRecords
-      });
-    } else {
-      res.status(404).json({
-        message: memoResult.message || 'No credit/debit memo data found',
-        debitMemos: [],
-        creditMemos: []
-      });
-    }
-
-  } catch (error) {
-    console.error('Credit/Debit memo fetch error:', error);
-    
-    // Return proper error response
-    res.status(500).json({
-      message: 'Failed to fetch credit/debit memo data from SAP',
-      error: error.message,
-      details: 'Check server logs for more information'
-    });
-  }
 });
 
 // Protected route - Dashboard data
@@ -397,22 +250,12 @@ app.use((error, req, res, next) => {
   });
 });
 
-// Initialize and start server
-async function startServer() {
-  try {
-    app.listen(PORT, () => {
-      console.log(`🚀 Server is running on port ${PORT}`);
-      console.log(`📍 API URL: http://localhost:${PORT}`);
-    //   console.log(`🔍 Health check: http://localhost:${PORT}/api/health`);
-    //   console.log(`� SAP Integration: ${SAP_CONFIG.url}`);
-    //   console.log('\n📋 SAP Vendor Portal Login:');
-    //   console.log('   Use your Vendor ID and Password from ZVP_LOGIN_TABLE');
-    //   console.log('   Example: Vendor ID format should match LIFNR from LFA1 table');
-    });
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
-  }
-}
+// Start server
+app.listen(PORT, () => {
+  console.log('Server is running on port ' + PORT);
+  console.log('API URL: http://localhost:' + PORT);
+  console.log('Health check: http://localhost:' + PORT + '/api/health');
+  console.log('Frontend can now connect to backend');
+});
 
-startServer();
+console.log('Server setup complete, starting...');

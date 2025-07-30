@@ -1,0 +1,151 @@
+<div class="payment-aging-container">
+  <!-- Header Section -->
+  <div class="section-header">
+    <div class="header-content">
+      <h2>⏰ Payment and Aging Reports</h2>
+      <p>Track payment status and aging analysis from SAP backend</p>
+    </div>
+    <button class="refresh-btn" (click)="refreshData()" [disabled]="loading">
+      <span class="refresh-icon" [class.spinning]="loading">🔄</span>
+      Refresh Data
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Fetching payment aging data from SAP...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-container">
+    <div class="error-message">
+      <span class="error-icon">⚠️</span>
+      <div>
+        <h3>Error Loading Data</h3>
+        <p>{{ error }}</p>
+        <button class="retry-btn" (click)="refreshData()">Try Again</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div *ngIf="summary && !loading && !error" class="summary-section">
+    <div class="summary-cards">
+      <div class="summary-card current" (click)="setFilter('current')" [class.active]="selectedFilter === 'current'">
+        <div class="card-header">
+          <h4>Current</h4>
+          <span class="status-indicator current"></span>
+        </div>
+        <div class="card-content">
+          <div class="amount">{{ formatCurrency(summary.current.amount) }}</div>
+          <div class="count">{{ summary.current.count }} Invoices</div>
+        </div>
+      </div>
+
+      <div class="summary-card days30" (click)="setFilter('30days')" [class.active]="selectedFilter === '30days'">
+        <div class="card-header">
+          <h4>1-30 Days</h4>
+          <span class="status-indicator days30"></span>
+        </div>
+        <div class="card-content">
+          <div class="amount">{{ formatCurrency(summary.days30.amount) }}</div>
+          <div class="count">{{ summary.days30.count }} Invoices</div>
+        </div>
+      </div>
+
+      <div class="summary-card days60" (click)="setFilter('60days')" [class.active]="selectedFilter === '60days'">
+        <div class="card-header">
+          <h4>31-60 Days</h4>
+          <span class="status-indicator days60"></span>
+        </div>
+        <div class="card-content">
+          <div class="amount">{{ formatCurrency(summary.days60.amount) }}</div>
+          <div class="count">{{ summary.days60.count }} Invoices</div>
+        </div>
+      </div>
+
+      <div class="summary-card days90" (click)="setFilter('90days')" [class.active]="selectedFilter === '90days'">
+        <div class="card-header">
+          <h4>61-90 Days</h4>
+          <span class="status-indicator days90"></span>
+        </div>
+        <div class="card-content">
+          <div class="amount">{{ formatCurrency(summary.days90.amount) }}</div>
+          <div class="count">{{ summary.days90.count }} Invoices</div>
+        </div>
+      </div>
+
+      <div class="summary-card overdue" (click)="setFilter('overdue')" [class.active]="selectedFilter === 'overdue'">
+        <div class="card-header">
+          <h4>90+ Days</h4>
+          <span class="status-indicator overdue"></span>
+        </div>
+        <div class="card-content">
+          <div class="amount">{{ formatCurrency(summary.overdue.amount) }}</div>
+          <div class="count">{{ summary.overdue.count }} Invoices</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Table -->
+  <div *ngIf="getFilteredData().length > 0 && !loading && !error" class="table-section">
+    <div class="table-container">
+      <table class="payment-table">
+        <thead>
+          <tr>
+            <th>Document No.</th>
+            <th>Posting Date</th>
+            <th>Document Date</th>
+            <th>Amount</th>
+            <th>Currency</th>
+            <th>Baseline Date</th>
+            <th>Due Date</th>
+            <th>Aging Days</th>
+            <th>Status</th>
+            <th>Payment Terms</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of getFilteredData(); trackBy: trackByDocumentNumber" class="table-row">
+            <td class="document-number">{{ item.documentNumber }}</td>
+            <td>{{ item.postingDate }}</td>
+            <td>{{ item.documentDate }}</td>
+            <td class="amount">{{ formatCurrency(item.amount, item.currency) }}</td>
+            <td class="currency">{{ item.currency }}</td>
+            <td>{{ item.baselineDate }}</td>
+            <td>{{ item.dueDate }}</td>
+            <td class="aging-days" [class]="getStatusClass(item.status)">{{ item.agingDays }}</td>
+            <td>
+              <span class="status-badge" [class]="getStatusClass(item.status)">
+                {{ item.status }}
+              </span>
+            </td>
+            <td class="payment-terms">{{ item.paymentTerms }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- No Data State -->
+  <div *ngIf="!loading && !error && paymentData.length === 0" class="no-data-container">
+    <div class="no-data-message">
+      <span class="no-data-icon">📊</span>
+      <h3>No Payment Data Available</h3>
+      <p>No payment aging records found for your vendor account.</p>
+      <button class="refresh-btn" (click)="refreshData()">Refresh Data</button>
+    </div>
+  </div>
+
+  <!-- Filtered No Data State -->
+  <div *ngIf="!loading && !error && paymentData.length > 0 && getFilteredData().length === 0" class="no-data-container">
+    <div class="no-data-message">
+      <span class="no-data-icon">🔍</span>
+      <h3>No Records for Selected Filter</h3>
+      <p>No payment records match the current filter criteria.</p>
+      <button class="filter-btn" (click)="setFilter('all')">Show All Records</button>
+    </div>
+  </div>
+</div>

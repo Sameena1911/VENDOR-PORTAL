@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SAP Payment Aging Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .loading { background-color: #d1ecf1; border-color: #bee5eb; color: #0c5460; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 SAP Payment Aging Integration Test</h1>
+        
+        <div class="section">
+            <h2>Step 1: Backend Server Test</h2>
+            <button onclick="testBackendHealth()">Test Backend Connection</button>
+            <div id="backend-result"></div>
+        </div>
+
+        <div class="section">
+            <h2>Step 2: Login Test</h2>
+            <div>
+                <label>Vendor ID: </label>
+                <input type="text" id="vendorId" value="0000100000" placeholder="Enter vendor ID or email">
+            </div>
+            <div>
+                <label>Password: </label>
+                <input type="password" id="password" value="123" placeholder="Enter password">
+            </div>
+            <button onclick="testLogin()">Test Login</button>
+            <div id="login-result"></div>
+        </div>
+
+        <div class="section">
+            <h2>Step 3: Payment Aging Data Test</h2>
+            <button onclick="testPaymentAging()" id="payment-btn" disabled>Test Payment Aging Data</button>
+            <div id="payment-result"></div>
+        </div>
+
+        <div class="section">
+            <h2>Step 4: Data Display</h2>
+            <div id="data-display"></div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = null;
+
+        async function testBackendHealth() {
+            const resultDiv = document.getElementById('backend-result');
+            resultDiv.innerHTML = '<div class="loading">Testing backend connection...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/health');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="success">✅ Backend Connected Successfully!<br><pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Backend Error: ${response.status}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Backend Connection Failed: ${error.message}<br>Make sure the backend server is running on port 3001</div>`;
+            }
+        }
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('login-result');
+            const vendorId = document.getElementById('vendorId').value;
+            const password = document.getElementById('password').value;
+            
+            resultDiv.innerHTML = '<div class="loading">Testing login...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: vendorId,
+                        password: password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.token;
+                    document.getElementById('payment-btn').disabled = false;
+                    resultDiv.innerHTML = `<div class="success">✅ Login Successful!<br>
+                        Vendor ID: ${data.user.vendorId}<br>
+                        Login User: ${data.user.loginUser}<br>
+                        Token: ${authToken.substring(0, 50)}...
+                    </div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Login Failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Login Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testPaymentAging() {
+            const resultDiv = document.getElementById('payment-result');
+            
+            if (!authToken) {
+                resultDiv.innerHTML = '<div class="error">❌ Please login first</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="loading">Loading payment aging data from SAP...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/vendor/payment-aging', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="success">✅ Payment Aging Data Retrieved Successfully!<br>
+                        Total Records: ${data.totalRecords}<br>
+                        Data Length: ${data.data.length}
+                    </div>`;
+                    
+                    displayPaymentData(data);
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Payment Aging Error: ${data.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Payment Aging Error: ${error.message}</div>`;
+            }
+        }
+
+        function displayPaymentData(data) {
+            const displayDiv = document.getElementById('data-display');
+            
+            if (!data.data || data.data.length === 0) {
+                displayDiv.innerHTML = '<div class="error">No payment data to display</div>';
+                return;
+            }
+
+            // Summary Cards
+            let summaryHtml = '<h3>📊 Payment Summary</h3>';
+            if (data.summary) {
+                summaryHtml += `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 15px 0;">
+                        <div style="background: #d4edda; padding: 10px; border-radius: 5px;">
+                            <strong>Current</strong><br>
+                            ${data.summary.current.count} records<br>
+                            ₹${data.summary.current.amount.toLocaleString()}
+                        </div>
+                        <div style="background: #fff3cd; padding: 10px; border-radius: 5px;">
+                            <strong>1-30 Days</strong><br>
+                            ${data.summary.days30.count} records<br>
+                            ₹${data.summary.days30.amount.toLocaleString()}
+                        </div>
+                        <div style="background: #f8d7da; padding: 10px; border-radius: 5px;">
+                            <strong>90+ Days Overdue</strong><br>
+                            ${data.summary.overdue.count} records<br>
+                            ₹${data.summary.overdue.amount.toLocaleString()}
+                        </div>
+                        <div style="background: #d1ecf1; padding: 10px; border-radius: 5px;">
+                            <strong>Total Outstanding</strong><br>
+                            ${data.summary.total.count} records<br>
+                            ₹${data.summary.total.amount.toLocaleString()}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Data Table
+            let tableHtml = '<h3>📋 Payment Records (First 10)</h3><table>';
+            tableHtml += `
+                <tr>
+                    <th>Vendor ID</th>
+                    <th>Document Number</th>
+                    <th>Amount</th>
+                    <th>Aging Days</th>
+                    <th>Status</th>
+                    <th>Payment Terms</th>
+                </tr>
+            `;
+
+            data.data.slice(0, 10).forEach(record => {
+                tableHtml += `
+                    <tr>
+                        <td>${record.vendorId}</td>
+                        <td>${record.documentNumber}</td>
+                        <td>₹${record.amount.toLocaleString()}</td>
+                        <td>${record.agingDays}</td>
+                        <td><span style="padding: 2px 6px; border-radius: 3px; background: ${getStatusColor(record.status)}; color: white; font-size: 12px;">${record.status}</span></td>
+                        <td>${record.paymentTerms}</td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += '</table>';
+
+            displayDiv.innerHTML = summaryHtml + tableHtml;
+        }
+
+        function getStatusColor(status) {
+            switch(status) {
+                case 'Current': return '#28a745';
+                case '1-30 Days': return '#ffc107';
+                case '31-60 Days': return '#fd7e14';
+                case '61-90 Days': return '#dc3545';
+                case '90+ Days Overdue': return '#6f42c1';
+                default: return '#6c757d';
+            }
+        }
+
+        // Auto-test backend on page load
+        window.onload = function() {
+            testBackendHealth();
+        };
+    </script>
+</body>
+</html>

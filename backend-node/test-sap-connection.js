@@ -1,11 +1,71 @@
-// Simple test script to check SAP connection and response
-const axios = require('axios');
+// Simple test script to check SAP Payment Aging connection and response
+const { fetchPaymentAgingFromSAP } = require('./services/paymentAgingService');
 
-const SAP_CONFIG = {
-  url: 'http://AZKTLDS5CP.kcloud.com:8000/sap/bc/srt/scs/sap/zvp_profile_service?sap-client=100',
-  username: 'k901705',
-  password: 'Sameena@1911'
-};
+async function testSAPPaymentAging() {
+    console.log('🧪 Testing SAP Payment Aging Service...');
+    console.log('=' .repeat(50));
+    
+    try {
+        // Test with your actual LIFNR vendor ID and password
+        const vendorId = '0000100000'; // Your actual SAP vendor ID
+        const password = '123'; // Your actual password
+        
+        console.log(`📡 Fetching payment aging data for vendor: ${vendorId}`);
+        console.log('⏳ Connecting to SAP...');
+        
+        const result = await fetchPaymentAgingFromSAP(vendorId);
+        
+        console.log('✅ SAP Connection Successful!');
+        console.log('📊 Payment Aging Data Retrieved:');
+        console.log('=' .repeat(50));
+        
+        if (result.success) {
+            console.log(`📝 Total Records: ${result.totalRecords}`);
+            console.log(`💾 Data Length: ${result.data.length}`);
+            
+            if (result.data.length > 0) {
+                console.log('\n📋 Sample Records (first 3):');
+                result.data.slice(0, 3).forEach((record, index) => {
+                    console.log(`\n${index + 1}. Vendor: ${record.vendorId}`);
+                    console.log(`   Document: ${record.documentNumber}`);
+                    console.log(`   Amount: ${record.currency} ${record.amount}`);
+                    console.log(`   Due Date: ${record.dueDate}`);
+                    console.log(`   Aging: ${record.agingDays} days`);
+                    console.log(`   Status: ${record.status}`);
+                });
+            }
+            
+            if (result.summary) {
+                console.log('\n💰 Payment Summary:');
+                console.log(`   Current: ${result.summary.current.count} records, Amount: ${result.summary.current.amount}`);
+                console.log(`   1-30 Days: ${result.summary.days30.count} records, Amount: ${result.summary.days30.amount}`);
+                console.log(`   31-60 Days: ${result.summary.days60.count} records, Amount: ${result.summary.days60.amount}`);
+                console.log(`   61-90 Days: ${result.summary.days90.count} records, Amount: ${result.summary.days90.amount}`);
+                console.log(`   90+ Days: ${result.summary.overdue.count} records, Amount: ${result.summary.overdue.amount}`);
+                console.log(`   Total: ${result.summary.total.count} records, Amount: ${result.summary.total.amount}`);
+            }
+            
+            console.log('\n🎉 Test Completed Successfully!');
+            console.log('✅ Ready to display data in frontend');
+            
+        } else {
+            console.log('⚠️  No data returned from SAP');
+            console.log('Message:', result.message);
+        }
+        
+    } catch (error) {
+        console.error('❌ SAP Connection Failed:');
+        console.error('Error:', error.message);
+        console.error('\n🔧 Troubleshooting Tips:');
+        console.error('1. Check if SAP server is accessible');
+        console.error('2. Verify credentials and URL');
+        console.error('3. Check network connectivity');
+        console.error('4. Ensure SAP service is running');
+    }
+}
+
+// Run the test
+testSAPPaymentAging();
 
 // Test 1: Check if the service endpoint is reachable
 async function testSAPEndpoint() {

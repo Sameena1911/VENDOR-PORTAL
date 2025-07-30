@@ -122,4 +122,43 @@ export class AuthService {
       throw error;
     }
   }
+
+  // Generic method for making authenticated requests
+  async makeRequest(endpoint: string, method: string = 'GET', data?: any): Promise<any> {
+    const token = this.getToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+
+    const url = `${this.apiUrl}${endpoint}`;
+
+    try {
+      let response;
+      switch (method.toUpperCase()) {
+        case 'GET':
+          response = await this.http.get(url, { headers }).toPromise();
+          break;
+        case 'POST':
+          response = await this.http.post(url, data, { headers }).toPromise();
+          break;
+        case 'PUT':
+          response = await this.http.put(url, data, { headers }).toPromise();
+          break;
+        case 'DELETE':
+          response = await this.http.delete(url, { headers }).toPromise();
+          break;
+        default:
+          throw new Error(`Unsupported HTTP method: ${method}`);
+      }
+      return response;
+    } catch (error) {
+      console.error(`Error making ${method} request to ${endpoint}:`, error);
+      throw error;
+    }
+  }
 }
