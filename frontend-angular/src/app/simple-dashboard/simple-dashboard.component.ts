@@ -5,12 +5,16 @@ import { SidebarComponent } from '../components/sidebar/sidebar.component';
 import { VendorProfileComponent } from '../vendor-profile/vendor-profile.component';
 import { PaymentAgingReportsComponent } from '../payment-aging-reports/payment-aging-reports.component';
 import { CreditDebitMemoComponent } from '../credit-debit-memo/credit-debit-memo.component';
+import { InvoiceComponent } from '../invoice/invoice.component';
+import { PurchaseOrderComponent } from '../purchase-order/purchase-order.component';
+import { GoodsReceiptComponent } from '../goods-receipt/goods-receipt.component';
+import { RFQComponent } from '../rfq/rfq.component';
 import { AuthService } from '../services';
 
 @Component({
   selector: 'app-simple-dashboard',
   standalone: true,
-  imports: [CommonModule, SidebarComponent, VendorProfileComponent, PaymentAgingReportsComponent, CreditDebitMemoComponent],
+  imports: [CommonModule, SidebarComponent, VendorProfileComponent, PaymentAgingReportsComponent, CreditDebitMemoComponent, InvoiceComponent, PurchaseOrderComponent, GoodsReceiptComponent, RFQComponent],
   templateUrl: './simple-dashboard.component.html',
   styleUrls: ['./simple-dashboard.component.css']
 })

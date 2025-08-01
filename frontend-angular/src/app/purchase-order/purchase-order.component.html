@@ -1,0 +1,113 @@
+<div class="purchase-order-container">
+  <!-- Header -->
+  <div class="page-header">
+    <h2>Purchase Order Management</h2>
+    <!-- <button class="btn btn-primary" (click)="refresh()" [disabled]="isLoading">
+      <span *ngIf="isLoading">Loading...</span>
+      <span *ngIf="!isLoading">Refresh</span>
+    </button> -->
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="error-message">
+    <strong>Error:</strong> {{ error }}
+    <button class="btn btn-link" (click)="loadPurchaseOrders()">Try Again</button>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-cards" *ngIf="!isLoading && purchaseOrders.length > 0">
+    <div class="summary-card total">
+      <div class="card-content">
+        <div class="card-label">Total Orders</div>
+        <div class="card-count">{{ summary.totalCount }} POs</div>
+      </div>
+    </div>
+    <div class="summary-card open">
+      <div class="card-content">
+        <div class="card-label">Open</div>
+        <div class="card-count">{{ summary.openCount }} POs</div>
+      </div>
+    </div>
+    <div class="summary-card due-soon">
+      <div class="card-content">
+        <div class="card-label">Due Soon</div>
+        <div class="card-count">{{ summary.dueSoonCount }} POs</div>
+      </div>
+    </div>
+    <div class="summary-card overdue">
+      <div class="card-content">
+        <div class="card-label">Overdue</div>
+        <div class="card-count">{{ summary.overdueCount }} POs</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section" *ngIf="!isLoading && purchaseOrders.length > 0">
+    <div class="filters-row">
+      <div class="filter-group">
+        <label>From Date:</label>
+        <input type="date" [(ngModel)]="filterDateFrom" (change)="filterPurchaseOrders()">
+      </div>
+      
+      <div class="filter-group">
+        <label>To Date:</label>
+        <input type="date" [(ngModel)]="filterDateTo" (change)="filterPurchaseOrders()">
+      </div>
+      
+      <div class="filter-group">
+        <label>Search:</label>
+        <input type="text" [(ngModel)]="searchText" (input)="filterPurchaseOrders()" placeholder="PO number, vendor ID...">
+      </div>
+      
+      <button class="btn btn-secondary" (click)="clearFilters()">Clear Filters</button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Loading purchase orders from SAP...</p>
+  </div>
+
+  <!-- Purchase Order Table -->
+  <div class="table-container" *ngIf="!isLoading && filteredPurchaseOrders.length > 0">
+    <table class="po-table">
+      <thead>
+        <tr>
+          <th>PO Number</th>
+          <th>Vendor ID</th>
+          <th>PO Date</th>
+          <th>Expected Delivery</th>
+          <th>Currency</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let po of filteredPurchaseOrders">
+          <td class="po-number">{{ po.poNumber }}</td>
+          <td>{{ po.vendorId }}</td>
+          <td>{{ formatDate(po.poDate) }}</td>
+          <td>{{ formatDate(po.edd) }}</td>
+          <td class="currency">{{ po.currency }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- No Data State -->
+  <div *ngIf="!isLoading && filteredPurchaseOrders.length === 0 && purchaseOrders.length > 0" class="no-data">
+    <p>No purchase orders match your current filters.</p>
+    <button class="btn btn-secondary" (click)="clearFilters()">Clear Filters</button>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && purchaseOrders.length === 0 && !error" class="empty-state">
+    <p>No purchase orders found for your vendor account.</p>
+    <button class="btn btn-primary" (click)="loadPurchaseOrders()">Reload</button>
+  </div>
+
+  <!-- Results Count -->
+  <div class="results-info" *ngIf="!isLoading && filteredPurchaseOrders.length > 0">
+    Showing {{ filteredPurchaseOrders.length }} of {{ purchaseOrders.length }} purchase orders
+  </div>
+</div>

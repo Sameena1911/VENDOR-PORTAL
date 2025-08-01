@@ -1,0 +1,187 @@
+<div class="invoice-container">
+  <!-- Header -->
+  <div class="page-header">
+    <h2>Invoice Management</h2>
+    <button class="btn btn-primary" (click)="refresh()" [disabled]="isLoading">
+      <span *ngIf="isLoading">Loading...</span>
+      <span *ngIf="!isLoading">Refresh</span>
+    </button>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="error-message">
+    <strong>Error:</strong> {{ error }}
+    <button class="btn btn-link" (click)="loadInvoices()">Try Again</button>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-cards" *ngIf="!isLoading && invoices.length > 0">
+    <div class="summary-card total">
+      <div class="card-content">
+        <div class="card-value">{{ formatCurrency(summary.totalAmount) }}</div>
+        <div class="card-label">Total Amount</div>
+        <div class="card-count">{{ summary.totalCount }} invoices</div>
+      </div>
+    </div>
+    <div class="summary-card paid">
+      <div class="card-content">
+        <div class="card-value">{{ formatCurrency(summary.paidAmount) }}</div>
+        <div class="card-label">Paid</div>
+        <div class="card-count">{{ summary.paidCount }} invoices</div>
+      </div>
+    </div>
+    <div class="summary-card pending">
+      <div class="card-content">
+        <div class="card-value">{{ formatCurrency(summary.pendingAmount) }}</div>
+        <div class="card-label">Pending</div>
+        <div class="card-count">{{ summary.pendingCount }} invoices</div>
+      </div>
+    </div>
+    <div class="summary-card overdue">
+      <div class="card-content">
+        <div class="card-value">{{ formatCurrency(summary.overDueAmount) }}</div>
+        <div class="card-label">Overdue</div>
+        <div class="card-count">{{ summary.overDueCount }} invoices</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section" *ngIf="!isLoading && invoices.length > 0">
+    <div class="filters-row">
+      <div class="filter-group">
+        <label>Status:</label>
+        <select [(ngModel)]="filterStatus" (change)="filterInvoices()">
+          <option value="">All Statuses</option>
+          <option value="Paid">Paid</option>
+          <option value="Pending">Pending</option>
+          <option value="Overdue">Overdue</option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label>From Date:</label>
+        <input type="date" [(ngModel)]="filterDateFrom" (change)="filterInvoices()">
+      </div>
+      
+      <div class="filter-group">
+        <label>To Date:</label>
+        <input type="date" [(ngModel)]="filterDateTo" (change)="filterInvoices()">
+      </div>
+      
+      <div class="filter-group">
+        <label>Search:</label>
+        <input type="text" [(ngModel)]="searchText" (input)="filterInvoices()" placeholder="Document, vendor, description...">
+      </div>
+      
+      <button class="btn btn-secondary" (click)="clearFilters()">Clear Filters</button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Loading invoices from SAP...</p>
+  </div>
+
+  <!-- Invoice Table -->
+  <div class="table-container" *ngIf="!isLoading && filteredInvoices.length > 0">
+    <table class="invoice-table">
+      <thead>
+        <tr>
+          <th>Document Number</th>
+          <th>Date</th>
+          <th>Vendor</th>
+          <th>Amount</th>
+          <th>Due Date</th>
+          <th>Status</th>
+          <th>Description</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let invoice of filteredInvoices">
+          <td class="document-number">{{ invoice.documentNumber }}</td>
+          <td>{{ formatDate(invoice.documentDate) }}</td>
+          <td>
+            <div class="vendor-info">
+              <div class="vendor-name">{{ invoice.vendorName }}</div>
+              <div class="vendor-id">{{ invoice.vendorId }}</div>
+            </div>
+          </td>
+          <td class="amount">{{ formatCurrency(invoice.amount, invoice.currency) }}</td>
+          <td>{{ formatDate(invoice.dueDate) }}</td>
+          <td>
+            <span class="status-badge" [ngClass]="getStatusClass(invoice.status)">
+              {{ invoice.status }}
+            </span>
+          </td>
+          <td class="description">{{ invoice.description }}</td>
+          <td class="actions">
+            <button class="btn btn-sm btn-info" (click)="viewPDF(invoice)" title="View PDF">
+              View PDF
+            </button>
+            <button class="btn btn-sm btn-success" (click)="downloadPDF(invoice)" title="Download PDF">
+              Download
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- No Data State -->
+  <div *ngIf="!isLoading && filteredInvoices.length === 0 && invoices.length > 0" class="no-data">
+    <p>No invoices match your current filters.</p>
+    <button class="btn btn-secondary" (click)="clearFilters()">Clear Filters</button>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && invoices.length === 0 && !error" class="empty-state">
+    <p>No invoices found for your vendor account.</p>
+    <button class="btn btn-primary" (click)="loadInvoices()">Reload</button>
+  </div>
+
+  <!-- Results Count -->
+  <div class="results-info" *ngIf="!isLoading && filteredInvoices.length > 0">
+    Showing {{ filteredInvoices.length }} of {{ invoices.length }} invoices
+  </div>
+</div>
+
+<!-- PDF Viewer Modal -->
+<div class="pdf-modal" *ngIf="showPdfViewer" (click)="closePdfViewer()">
+  <div class="pdf-modal-content" (click)="$event.stopPropagation()">
+    <div class="pdf-modal-header">
+      <h3>Invoice PDF - {{ selectedInvoice?.documentNumber }}</h3>
+      <div class="pdf-modal-actions">
+        <button class="btn btn-success" (click)="downloadPDF(selectedInvoice!)" *ngIf="selectedInvoice">
+          Download PDF
+        </button>
+        <button class="btn btn-secondary" (click)="closePdfViewer()">
+          Close
+        </button>
+      </div>
+    </div>
+    
+    <div class="pdf-modal-body">
+      <div *ngIf="loadingPdf" class="pdf-loading">
+        <div class="loading-spinner"></div>
+        <p>Loading PDF...</p>
+      </div>
+      
+      <iframe 
+        *ngIf="pdfUrl && !loadingPdf"
+        [src]="pdfUrl" 
+        class="pdf-iframe"
+        title="Invoice PDF">
+      </iframe>
+      
+      <div *ngIf="!pdfUrl && !loadingPdf" class="pdf-error">
+        <p>Failed to load PDF. Please try downloading instead.</p>
+        <button class="btn btn-success" (click)="downloadPDF(selectedInvoice!)" *ngIf="selectedInvoice">
+          Download PDF
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

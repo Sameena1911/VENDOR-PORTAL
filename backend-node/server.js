@@ -14,6 +14,14 @@ const { fetchVendorProfileFromSAP } = require('./services/vendorProfileService')
 const { fetchPaymentAgingFromSAP } = require('./services/paymentAgingService');
 // Import credit debit memo service
 const { fetchCreditDebitMemoFromSAP } = require('./services/creditDebitMemoService');
+// Import invoice service
+const { fetchInvoiceListFromSAP, fetchInvoicePDFFromSAP, savePDFToFile } = require('./services/invoiceService');
+// Import purchase order service
+const { fetchPurchaseOrdersFromSAP } = require('./services/purchaseOrderService');
+// Import goods receipt service
+const { fetchGoodsReceiptsFromSAP } = require('./services/goodsReceiptService');
+// Import RFQ service
+const { fetchRFQsFromSAP } = require('./services/rfqService');
 
 
 const app = express();
@@ -342,6 +350,278 @@ app.get('/api/vendor/credit-debit-memo', verifyToken, async (req, res) => {
     // Return proper error response
     res.status(500).json({
       message: 'Failed to fetch credit/debit memo data from SAP',
+      error: error.message,
+      details: 'Check server logs for more information'
+    });
+  }
+});
+
+// Protected route - Get invoice list from SAP
+app.get('/api/vendor/invoices', verifyToken, async (req, res) => {
+  try {
+    const vendorId = req.user.vendorId;
+    
+    if (!vendorId) {
+      return res.status(400).json({
+        message: 'Vendor ID not found in token',
+        error: 'Missing vendor ID'
+      });
+    }
+
+    console.log(`Fetching invoice list for vendor: ${vendorId}`);
+
+    // Fetch invoice list from SAP
+    const invoiceResult = await fetchInvoiceListFromSAP(vendorId);
+    
+    if (invoiceResult.success) {
+      res.json({
+        message: 'Invoice list retrieved successfully from SAP',
+        invoices: invoiceResult.invoices,
+        summary: invoiceResult.summary,
+        totalRecords: invoiceResult.totalRecords
+      });
+    } else {
+      res.status(404).json({
+        message: invoiceResult.message || 'No invoice data found',
+        invoices: []
+      });
+    }
+
+  } catch (error) {
+    console.error('Invoice list fetch error:', error);
+    
+    // Return proper error response
+    res.status(500).json({
+      message: 'Failed to fetch invoice list from SAP',
+      error: error.message,
+      details: 'Check server logs for more information'
+    });
+  }
+});
+
+// Protected route - Get invoice PDF from SAP
+app.get('/api/vendor/invoice/:documentNumber/pdf', verifyToken, async (req, res) => {
+  try {
+    const vendorId = req.user.vendorId;
+    const documentNumber = req.params.documentNumber;
+    
+    if (!vendorId) {
+      return res.status(400).json({
+        message: 'Vendor ID not found in token',
+        error: 'Missing vendor ID'
+      });
+    }
+
+    if (!documentNumber) {
+      return res.status(400).json({
+        message: 'Document number is required',
+        error: 'Missing document number'
+      });
+    }
+
+    console.log(`Fetching invoice PDF for vendor: ${vendorId}, document: ${documentNumber}`);
+
+    // Fetch invoice PDF from SAP
+    const pdfResult = await fetchInvoicePDFFromSAP(vendorId, documentNumber);
+    
+    if (pdfResult.success) {
+      // Return base64 PDF data for preview/download
+      res.json({
+        message: 'Invoice PDF retrieved successfully from SAP',
+        pdfData: pdfResult.pdfData,
+        documentNumber: documentNumber,
+        vendorId: vendorId
+      });
+    } else {
+      res.status(404).json({
+        message: pdfResult.message || 'Invoice PDF not found',
+        error: 'PDF generation failed'
+      });
+    }
+
+  } catch (error) {
+    console.error('Invoice PDF fetch error:', error);
+    
+    // Return proper error response
+    res.status(500).json({
+      message: 'Failed to fetch invoice PDF from SAP',
+      error: error.message,
+      details: 'Check server logs for more information'
+    });
+  }
+});
+
+// Protected route - Download invoice PDF
+app.get('/api/vendor/invoice/:documentNumber/download', verifyToken, async (req, res) => {
+  try {
+    const vendorId = req.user.vendorId;
+    const documentNumber = req.params.documentNumber;
+    
+    if (!vendorId || !documentNumber) {
+      return res.status(400).json({
+        message: 'Vendor ID and document number are required'
+      });
+    }
+
+    console.log(`Downloading invoice PDF for vendor: ${vendorId}, document: ${documentNumber}`);
+
+    // Fetch invoice PDF from SAP
+    const pdfResult = await fetchInvoicePDFFromSAP(vendorId, documentNumber);
+    
+    if (pdfResult.success) {
+      // Convert base64 to buffer
+      const pdfBuffer = Buffer.from(pdfResult.pdfData, 'base64');
+      
+      // Set headers for PDF download
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="Invoice_${documentNumber}.pdf"`);
+      res.setHeader('Content-Length', pdfBuffer.length);
+      
+      // Send PDF buffer
+      res.send(pdfBuffer);
+    } else {
+      res.status(404).json({
+        message: pdfResult.message || 'Invoice PDF not found',
+        error: 'PDF generation failed'
+      });
+    }
+
+  } catch (error) {
+    console.error('Invoice PDF download error:', error);
+    
+    // Return proper error response
+    res.status(500).json({
+      message: 'Failed to download invoice PDF from SAP',
+      error: error.message,
+      details: 'Check server logs for more information'
+    });
+  }
+});
+
+// Protected route - Get purchase orders from SAP
+app.get('/api/vendor/purchase-orders', verifyToken, async (req, res) => {
+  try {
+    const vendorId = req.user.vendorId;
+    
+    if (!vendorId) {
+      return res.status(400).json({
+        message: 'Vendor ID not found in token',
+        error: 'Missing vendor ID'
+      });
+    }
+
+    console.log(`Fetching purchase orders for vendor: ${vendorId}`);
+
+    // Fetch purchase orders from SAP
+    const poResult = await fetchPurchaseOrdersFromSAP(vendorId);
+    
+    if (poResult.success) {
+      res.json({
+        message: 'Purchase orders retrieved successfully from SAP',
+        purchaseOrders: poResult.purchaseOrders,
+        summary: poResult.summary,
+        totalRecords: poResult.totalRecords
+      });
+    } else {
+      res.status(404).json({
+        message: poResult.message || 'No purchase order data found',
+        purchaseOrders: []
+      });
+    }
+
+  } catch (error) {
+    console.error('Purchase order fetch error:', error);
+    
+    // Return proper error response
+    res.status(500).json({
+      message: 'Failed to fetch purchase orders from SAP',
+      error: error.message,
+      details: 'Check server logs for more information'
+    });
+  }
+});
+
+// Protected route - Get goods receipts from SAP
+app.get('/api/vendor/goods-receipts', verifyToken, async (req, res) => {
+  try {
+    const vendorId = req.user.vendorId;
+    
+    if (!vendorId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Vendor ID not found in token',
+        error: 'Missing vendor ID'
+      });
+    }
+
+    console.log(`Fetching goods receipts for vendor: ${vendorId}`);
+
+    // Fetch goods receipts from SAP
+    const grResult = await fetchGoodsReceiptsFromSAP(vendorId);
+    
+    res.json({
+      success: grResult.success,
+      message: grResult.message,
+      data: grResult.data,
+      source: grResult.source,
+      totalRecords: grResult.data ? grResult.data.length : 0
+    });
+
+  } catch (error) {
+    console.error('Goods receipt fetch error:', error);
+    
+    // Return proper error response
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch goods receipts from SAP',
+      error: error.message,
+      details: 'Check server logs for more information'
+    });
+  }
+});
+
+// Protected route - Get RFQs from SAP
+app.get('/api/vendor/rfqs', verifyToken, async (req, res) => {
+  try {
+    const vendorId = req.user.vendorId;
+    
+    if (!vendorId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Vendor ID not found in token',
+        error: 'Missing vendor ID'
+      });
+    }
+
+    console.log(`Fetching RFQs for vendor: ${vendorId}`);
+
+    // Fetch RFQs from SAP
+    const rfqResult = await fetchRFQsFromSAP(vendorId);
+    
+    if (rfqResult.success) {
+      res.json({
+        message: 'RFQs retrieved successfully from SAP',
+        rfqs: rfqResult.rfqs,
+        summary: rfqResult.summary,
+        totalRecords: rfqResult.totalRecords
+      });
+    } else {
+      // Return fallback data if SAP fails
+      res.json({
+        message: rfqResult.error ? `SAP Error: ${rfqResult.error}` : 'Using fallback RFQ data',
+        rfqs: rfqResult.rfqs,
+        summary: rfqResult.summary,
+        totalRecords: rfqResult.totalRecords
+      });
+    }
+
+  } catch (error) {
+    console.error('RFQ fetch error:', error);
+    
+    // Return proper error response
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch RFQs from SAP',
       error: error.message,
       details: 'Check server logs for more information'
     });

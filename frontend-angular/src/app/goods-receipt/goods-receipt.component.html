@@ -1,0 +1,175 @@
+<div class="goods-receipt-container">
+  <!-- Header -->
+  <div class="header">
+    <h1>Goods Receipt</h1>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="loadGoodsReceipts()" [disabled]="isLoading">
+        <i class="fas fa-sync-alt" [class.fa-spin]="isLoading"></i>
+        Refresh
+      </button>
+      <button class="btn btn-primary" (click)="exportToCSV()">
+        <i class="fas fa-download"></i>
+        Export CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage" class="alert alert-error">
+    <i class="fas fa-exclamation-circle"></i>
+    {{ errorMessage }}
+  </div>
+
+  <!-- Summary Cards -->
+  <!-- <div class="summary-cards">
+    <div class="summary-card total">
+      <div class="card-icon">
+        <i class="fas fa-boxes"></i>
+      </div>
+      <div class="card-content">
+        <h3>Total Receipts</h3>
+        <div class="count">{{ summary.totalCount }} receipts</div>
+      </div>
+    </div>
+
+    <div class="summary-card today">
+      <div class="card-icon">
+        <i class="fas fa-calendar-day"></i>
+      </div>
+      <div class="card-content">
+        <h3>Today</h3>
+        <div class="count">{{ summary.todayCount }} receipts</div>
+      </div>
+    </div>
+
+    <div class="summary-card week">
+      <div class="card-icon">
+        <i class="fas fa-calendar-week"></i>
+      </div>
+      <div class="card-content">
+        <h3>This Week</h3>
+        <div class="count">{{ summary.weekCount }} receipts</div>
+      </div>
+    </div>
+
+    <div class="summary-card month">
+      <div class="card-icon">
+        <i class="fas fa-calendar-alt"></i>
+      </div>
+      <div class="card-content">
+        <h3>This Month</h3>
+        <div class="count">{{ summary.monthCount }} receipts</div>
+      </div>
+    </div>
+  </div> -->
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filters-row">
+      <div class="filter-group">
+        <label for="search">Search:</label>
+        <input
+          type="text"
+          id="search"
+          [(ngModel)]="searchTerm"
+          (input)="filterGoodsReceipts()"
+          placeholder="Search by GR#, Material, Description..."
+          class="form-control"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label for="period">Period:</label>
+        <select
+          id="period"
+          [(ngModel)]="selectedPeriod"
+          (change)="filterGoodsReceipts()"
+          class="form-control"
+        >
+          <option value="">All Periods</option>
+          <option value="today">Today</option>
+          <option value="week">This Week</option>
+          <option value="month">This Month</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="filters-row">
+      <div class="filter-group">
+        <label for="startDate">Start Date:</label>
+        <input
+          type="date"
+          id="startDate"
+          [(ngModel)]="startDate"
+          (change)="filterGoodsReceipts()"
+          class="form-control"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label for="endDate">End Date:</label>
+        <input
+          type="date"
+          id="endDate"
+          [(ngModel)]="endDate"
+          (change)="filterGoodsReceipts()"
+          class="form-control"
+        />
+      </div>
+
+      <div class="filter-group">
+        <button class="btn btn-secondary" (click)="clearFilters()">
+          <i class="fas fa-times"></i>
+          Clear Filters
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+      <span>Loading goods receipts...</span>
+    </div>
+  </div>
+
+  <!-- Goods Receipt Table -->
+  <div *ngIf="!isLoading" class="table-container">
+    <div class="table-header">
+      <h2>Goods Receipts ({{ filteredGoodsReceipts.length }})</h2>
+    </div>
+
+    <div class="table-wrapper">
+      <table class="goods-receipt-table">
+        <thead>
+          <tr>
+            <th>GR Number</th>
+            <th>GR Year</th>
+            <th>GR Date</th>
+            <th>Material</th>
+            <th>Description</th>
+            <th>Storage Loc</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let gr of filteredGoodsReceipts; trackBy: trackByGrNumber">
+            <td class="gr-number">{{ gr.grNumber }}</td>
+            <td class="gr-year">{{ gr.grYear }}</td>
+            <td class="gr-date">{{ gr.grDate | date:'dd/MM/yyyy' }}</td>
+            <td class="material">{{ gr.material }}</td>
+            <td class="description" [title]="gr.description">{{ gr.description }}</td>
+            <td class="storage-location">{{ gr.storageLocation }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- No Results Message -->
+    <div *ngIf="filteredGoodsReceipts.length === 0" class="no-results">
+      <i class="fas fa-search"></i>
+      <h3>No goods receipts found</h3>
+      <p>Try adjusting your search criteria or filters.</p>
+    </div>
+  </div>
+</div>

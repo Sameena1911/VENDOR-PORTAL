@@ -105,7 +105,7 @@
             <p>Manage and track your invoices with SAP integration</p>
           </div>
           
-          <div class="content-cards">
+          <!-- <div class="content-cards">
             <div class="info-card">
               <div class="card-header">
                 <h4>Recent Invoices</h4>
@@ -129,7 +129,7 @@
                 </div>
               </div>
             </div>
-          </div>
+          </div> -->
         </div>
 
         <div *ngSwitchCase="'payment-aging'" class="dashboard-section">
@@ -138,6 +138,22 @@
 
         <div *ngSwitchCase="'credit-debit-memo'" class="dashboard-section">
           <app-credit-debit-memo></app-credit-debit-memo>
+        </div>
+
+        <div *ngSwitchCase="'invoice'" class="dashboard-section">
+          <app-invoice></app-invoice>
+        </div>
+
+        <div *ngSwitchCase="'rfqs'" class="dashboard-section">
+          <app-rfq></app-rfq>
+        </div>
+
+        <div *ngSwitchCase="'pos'" class="dashboard-section">
+          <app-purchase-order></app-purchase-order>
+        </div>
+
+        <div *ngSwitchCase="'grs'" class="dashboard-section">
+          <app-goods-receipt></app-goods-receipt>
         </div>
       </ng-container>
     </div>
