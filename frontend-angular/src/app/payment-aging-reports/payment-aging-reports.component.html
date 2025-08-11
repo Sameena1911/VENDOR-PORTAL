@@ -142,10 +142,10 @@
               <th>Document Date</th>
               <th>Currency</th>
               <th>Amount</th>
-              <th>Due Date</th>
+              <!-- <th>Due Date</th> -->
               <th>Aging Days</th>
               <th>Status</th>
-              <th>Payment Terms</th>
+              <!-- <th>Payment Terms</th> -->
             </tr>
           </thead>
           <tbody>
@@ -157,7 +157,7 @@
               <td class="document-date">{{ item.documentDate | date:'dd/MM/yyyy' }}</td>
               <td class="currency">{{ item.currency }}</td>
               <td class="amount">{{ formatCurrency(item.amount, item.currency) }}</td>
-              <td class="due-date">{{ item.dueDate | date:'dd/MM/yyyy' }}</td>
+              <!-- <td class="due-date">{{ item.dueDate | date:'dd/MM/yyyy' }}</td> -->
               <td class="aging-days" [class]="getStatusClass(item.status)">
                 {{ item.agingDays }} days
               </td>
@@ -166,7 +166,7 @@
                   {{ item.status }}
                 </span>
               </td>
-              <td class="payment-terms">{{ item.paymentTerms }}</td>
+              <!-- <td class="payment-terms">{{ item.paymentTerms }}</td> -->
             </tr>
           </tbody>
         </table>

@@ -187,7 +187,7 @@
 
 .card-content .count {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #f1f1f3;
 }
 
 /* Table Section */
@@ -353,5 +353,130 @@
   .payment-table th,
   .payment-table td {
     padding: 8px 6px;
+  }
+}
+
+/* Pagination Styles */
+.pagination-container {
+  margin-top: 20px;
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.pagination-info {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pagination-details {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pagination-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #d1d5db;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #6b7280;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-icon {
+  font-size: 14px;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 4px;
+  margin: 0 8px;
+}
+
+.page-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #d1d5db;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  color: #374151;
+}
+
+.page-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.page-btn.active {
+  background: #0057D2;
+  border-color: #0057D2;
+  color: white;
+}
+
+.page-btn.active:hover {
+  background: #1e40af;
+}
+
+/* Responsive Pagination */
+@media (max-width: 768px) {
+  .pagination-container {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .pagination-info {
+    text-align: center;
+    order: 2;
+  }
+  
+  .pagination-controls {
+    order: 1;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .pagination-btn,
+  .page-btn {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .page-numbers {
+    margin: 0 4px;
   }
 }

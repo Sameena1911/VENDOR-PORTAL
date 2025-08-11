@@ -38,7 +38,15 @@ export class PaymentAgingComponent implements OnInit {
   summary: PaymentSummary | null = null;
   loading = false;
   error: string | null = null;
-  selectedFilter = 'all';
+  
+  // Pagination properties - fixed at 10 items per page
+  currentPage = 1;
+  itemsPerPage = 10;
+  totalItems = 0;
+  totalPages = 0;
+
+  // Math reference for template
+  Math = Math;
 
   constructor(private authService: AuthService) {}
 
@@ -54,6 +62,7 @@ export class PaymentAgingComponent implements OnInit {
       const response = await this.authService.makeRequest('/api/vendor/payment-aging', 'GET');
       this.paymentData = response.data || [];
       this.summary = response.summary || null;
+      this.updatePagination();
       console.log('Payment Aging Data:', this.paymentData);
       console.log('Summary:', this.summary);
     } catch (error: any) {
@@ -65,30 +74,70 @@ export class PaymentAgingComponent implements OnInit {
   }
 
   getFilteredData(): PaymentAgingItem[] {
-    if (this.selectedFilter === 'all') {
-      return this.paymentData;
-    }
-
-    return this.paymentData.filter(item => {
-      switch (this.selectedFilter) {
-        case 'current':
-          return item.agingDays <= 0;
-        case '30days':
-          return item.agingDays > 0 && item.agingDays <= 30;
-        case '60days':
-          return item.agingDays > 30 && item.agingDays <= 60;
-        case '90days':
-          return item.agingDays > 60 && item.agingDays <= 90;
-        case 'overdue':
-          return item.agingDays > 90;
-        default:
-          return true;
-      }
-    });
+    return this.paymentData;
   }
 
-  setFilter(filter: string) {
-    this.selectedFilter = filter;
+  getPaginatedData(): PaymentAgingItem[] {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    return this.paymentData.slice(startIndex, endIndex);
+  }
+
+  updatePagination() {
+    this.totalItems = this.paymentData.length;
+    this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+    
+    // Reset to first page if current page is beyond total pages
+    if (this.currentPage > this.totalPages && this.totalPages > 0) {
+      this.currentPage = 1;
+    }
+  }
+
+  // Pagination methods
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+    }
+  }
+
+  goToFirstPage() {
+    this.currentPage = 1;
+  }
+
+  goToLastPage() {
+    this.currentPage = this.totalPages;
+  }
+
+  goToPreviousPage() {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+    }
+  }
+
+  goToNextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+    }
+  }
+
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    
+    if (this.totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= this.totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      const startPage = Math.max(1, this.currentPage - 2);
+      const endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
+      
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+    }
+    
+    return pages;
   }
 
   getStatusClass(status: string): string {
