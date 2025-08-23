@@ -112,18 +112,37 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
+  
 }
 
 .filter-header h3 {
-  color: #333;
-  margin: 0;
+  display: inline-block;         /* makes it behave like a button */
+  color: #fff;
   font-size: 16px;
   font-weight: 600;
+  padding: 10px 20px;
+  margin: 10px 0;
+  border-radius: 6px;
+  background-color: #1976D2;     /* primary blue */
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
+
+.filter-header h3:hover {
+  background-color: #1565C0;     /* darker blue on hover */
+  transform: translateY(-2px);   /* slight lift */
+}
+
+.filter-header h3:active {
+  background-color: #0D47A1;     /* even darker when pressed */
+  transform: translateY(0);      /* reset lift */
+}
+
 
 .filter-controls {
   display: flex;
-  gap: 20px;
+  gap: 40px;
   align-items: flex-end;
   flex-wrap: wrap;
 }
@@ -163,6 +182,7 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   overflow-x: auto;
   margin-bottom: 20px;
+  width: 100%;
 }
 
 .table-header {

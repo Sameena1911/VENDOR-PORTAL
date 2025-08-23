@@ -92,10 +92,10 @@
           <th>Document Number</th>
           <!-- <th>Date</th> -->
           <th>Vendor</th>
-          <th>Amount</th>
+          <!-- <th>Amount</th> -->
           <th>Due Date</th>
-          <th>Status</th>
-          <th>Description</th>
+          <!-- <th>Status</th>
+          <th>Description</th> -->
           <th>Actions</th>
         </tr>
       </thead>
@@ -109,14 +109,14 @@
               <div class="vendor-id">{{ invoice.vendorId }}</div>
             </div>
           </td>
-          <td class="amount">{{ formatCurrency(invoice.amount, invoice.currency) }}</td>
+          <!-- <td class="amount">{{ formatCurrency(invoice.amount, invoice.currency) }}</td> -->
           <td>{{ formatDate(invoice.dueDate) }}</td>
-          <td>
+          <!-- <td>
             <span class="status-badge" [ngClass]="getStatusClass(invoice.status)">
               {{ invoice.status }}
             </span>
           </td>
-          <td class="description">{{ invoice.description }}</td>
+          <td class="description">{{ invoice.description }}</td> -->
           <td class="actions">
             <button class="btn btn-sm btn-info" (click)="viewPDF(invoice)" title="View PDF">
               View PDF

@@ -158,7 +158,7 @@
               <td class="currency">{{ item.currency }}</td>
               <td class="amount">{{ formatCurrency(item.amount, item.currency) }}</td>
               <!-- <td class="due-date">{{ item.dueDate | date:'dd/MM/yyyy' }}</td> -->
-              <td class="aging-days" [class]="getStatusClass(item.status)">
+              <td class="aging-days" [class]="getStatusClass(item.status)" style="color: white;">
                 {{ item.agingDays }} days
               </td>
               <td class="status">

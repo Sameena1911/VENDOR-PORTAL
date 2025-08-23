@@ -6,7 +6,7 @@
       <p class="subtitle">Manage and respond to quotation requests</p>
     </div>
     
-    <div class="header-actions">
+    <!-- <div class="header-actions">
       <button class="btn btn-secondary" (click)="onRefresh()" [disabled]="isLoading">
         <span class="icon">🔄</span>
         Refresh
@@ -15,7 +15,7 @@
         <span class="icon">📥</span>
         Export
       </button>
-    </div>
+    </div> -->
   </div>
 
   <!-- Summary Cards -->  
@@ -56,7 +56,7 @@
   <!-- Filter Section -->
   <div class="filter-section">
     <div class="filter-header">
-      <h3>🔍 Filter RFQs</h3>
+      <h3>Filter </h3>
       <button class="btn btn-link" (click)="clearFilters()">Clear All</button>
     </div>
     
@@ -110,7 +110,7 @@
   </div>
 
   <!-- RFQ Table -->
-  <div *ngIf="!isLoading && !error" class="table-container card">
+  <div *ngIf="!isLoading && !error" class="table-container">
     <div class="table-header">
       <h3>📋 RFQ List</h3>
       <div class="table-info">

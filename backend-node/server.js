@@ -22,7 +22,8 @@ const { fetchPurchaseOrdersFromSAP } = require('./services/purchaseOrderService'
 const { fetchGoodsReceiptsFromSAP } = require('./services/goodsReceiptService');
 // Import RFQ service
 const { fetchRFQsFromSAP } = require('./services/rfqService');
-
+// ✅ Import invoice header service
+// const { fetchInvoiceHeaderFromSAP } = require('./invoiceheader');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -355,7 +356,36 @@ app.get('/api/vendor/credit-debit-memo', verifyToken, async (req, res) => {
     });
   }
 });
+// ✅ New Protected Route - Fetch Invoice Header
+// app.get('/api/vendor/invoice-header', verifyToken, async (req, res) => {
+//   try {
+//     const vendorId = req.user.vendorId;
 
+//     if (!vendorId) {
+//       return res.status(400).json({
+//         message: 'Vendor ID not found in token',
+//         error: 'Missing vendor ID'
+//       });
+//     }
+
+//     console.log(`Fetching invoice header for vendor: ${vendorId}`);
+
+//     const result = await fetchInvoiceHeaderFromSAP(vendorId);
+
+//     res.json({
+//       message: 'Invoice header retrieved successfully from SAP',
+//       data: result
+//     });
+
+//   } catch (error) {
+//     console.error('Invoice header fetch error:', error);
+//     res.status(500).json({
+//       message: 'Failed to fetch invoice header from SAP',
+//       error: error.message,
+//       details: 'Check server logs for more information'
+//     });
+//   }
+// });
 // Protected route - Get invoice list from SAP
 app.get('/api/vendor/invoices', verifyToken, async (req, res) => {
   try {

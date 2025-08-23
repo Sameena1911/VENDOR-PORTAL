@@ -286,7 +286,10 @@
   border-bottom: 1px solid #dee2e6;
   color: #495057;
 }
-
+/* .payment-table .aging-days td {
+ 
+  color: white;
+} */
 .table-row:hover {
   background-color: #f8f9fa;
 }
