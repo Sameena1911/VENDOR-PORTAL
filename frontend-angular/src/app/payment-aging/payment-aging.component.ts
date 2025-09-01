@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../services/auth.service';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 interface PaymentAgingItem {
   vendorId: string;
@@ -48,7 +48,7 @@ export class PaymentAgingComponent implements OnInit {
   // Math reference for template
   Math = Math;
 
-  constructor(private authService: AuthService) {}
+  constructor(private http: HttpClient) {}
 
   ngOnInit() {
     this.loadPaymentAgingData();
@@ -59,15 +59,32 @@ export class PaymentAgingComponent implements OnInit {
     this.error = null;
 
     try {
-      const response = await this.authService.makeRequest('/api/vendor/payment-aging', 'GET');
-      this.paymentData = response.data || [];
-      this.summary = response.summary || null;
+      const token = localStorage.getItem('token');
+      const headers = new HttpHeaders({
+        'Authorization': `Bearer ${token}`
+      });
+      
+      const response = await this.http.get<any>('http://localhost:3001/api/vendor/payment-aging', { headers }).toPromise();
+      console.log('Payment Aging API Response:', response);
+      console.log('Response success:', response?.success);
+      console.log('Response data:', response?.data);
+      console.log('Response data length:', response?.data?.length);
+      
+      if (response && response.success && response.data) {
+        this.paymentData = response.data;
+        this.summary = response.summary;
+      } else {
+        this.paymentData = [];
+        this.summary = null;
+        this.error = response?.message || 'No payment aging data found';
+      }
+      
       this.updatePagination();
       console.log('Payment Aging Data:', this.paymentData);
       console.log('Summary:', this.summary);
     } catch (error: any) {
       console.error('Error loading payment aging data:', error);
-      this.error = error.message || 'Failed to load payment aging data';
+      this.error = error?.error?.message || 'Failed to load payment aging data';
     } finally {
       this.loading = false;
     }

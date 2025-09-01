@@ -288,13 +288,15 @@ app.get('/api/vendor/payment-aging', verifyToken, async (req, res) => {
     
     if (paymentAgingResult.success) {
       res.json({
+        success: true,
         message: 'Payment aging data retrieved successfully from SAP',
         data: paymentAgingResult.data,
         summary: paymentAgingResult.summary,
         totalRecords: paymentAgingResult.totalRecords
       });
     } else {
-      res.status(404).json({
+      res.json({
+        success: false,
         message: paymentAgingResult.message || 'No payment aging data found',
         data: []
       });

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../services/auth.service';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 interface PaymentAgingItem {
   vendorId: string;
@@ -38,9 +38,9 @@ export class PaymentAgingReportsComponent implements OnInit {
   summary: PaymentSummary | null = null;
   loading = false;
   error: string | null = null;
-  selectedFilter = 'all';
 
-  constructor(private authService: AuthService) {}
+
+  constructor(private http: HttpClient) {}
 
   ngOnInit() {
     this.loadPaymentAgingData();
@@ -52,49 +52,38 @@ export class PaymentAgingReportsComponent implements OnInit {
 
     try {
       console.log('Loading payment aging data...');
-      const response = await this.authService.makeRequest('/vendor/payment-aging', 'GET');
-      console.log('Payment aging response:', response);
       
-      this.paymentData = response.data || [];
-      this.summary = response.summary || null;
+      const token = localStorage.getItem('token');
+      const headers = new HttpHeaders({
+        'Authorization': `Bearer ${token}`
+      });
+      
+      const response = await this.http.get<any>('http://localhost:3001/api/vendor/payment-aging', { headers }).toPromise();
+      console.log('Payment aging response:', response);
+      console.log('Response success:', response?.success);
+      console.log('Response data:', response?.data);
+      console.log('Response data length:', response?.data?.length);
+      
+      if (response && response.success && response.data) {
+        this.paymentData = response.data;
+        this.summary = response.summary;
+      } else {
+        this.paymentData = [];
+        this.summary = null;
+        this.error = response?.message || 'No payment aging data found';
+      }
       
       console.log('Payment Aging Data loaded:', this.paymentData.length, 'records');
       console.log('Summary:', this.summary);
     } catch (error: any) {
       console.error('Error loading payment aging data:', error);
-      this.error = error.message || 'Failed to load payment aging data from SAP';
+      this.error = error?.error?.message || 'Failed to load payment aging data from SAP';
     } finally {
       this.loading = false;
     }
   }
 
-  getFilteredData(): PaymentAgingItem[] {
-    if (this.selectedFilter === 'all') {
-      return this.paymentData;
-    }
 
-    return this.paymentData.filter(item => {
-      switch (this.selectedFilter) {
-        case 'current':
-          return item.agingDays <= 0;
-        case '30days':
-          return item.agingDays > 0 && item.agingDays <= 30;
-        case '60days':
-          return item.agingDays > 30 && item.agingDays <= 60;
-        case '90days':
-          return item.agingDays > 60 && item.agingDays <= 90;
-        case 'overdue':
-          return item.agingDays > 90;
-        default:
-          return true;
-      }
-    });
-  }
-
-  setFilter(filter: string) {
-    this.selectedFilter = filter;
-    console.log('Filter set to:', filter, 'Filtered records:', this.getFilteredData().length);
-  }
 
   getStatusClass(status: string): string {
     switch (status) {

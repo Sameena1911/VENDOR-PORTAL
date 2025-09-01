@@ -28,7 +28,7 @@
         <div class="card-count">{{ summary.openCount }} POs</div>
       </div>
     </div>
-    <div class="summary-card due-soon">
+    <!-- <div class="summary-card due-soon">
       <div class="card-content">
         <div class="card-label">Due Soon</div>
         <div class="card-count">{{ summary.dueSoonCount }} POs</div>
@@ -39,8 +39,8 @@
         <div class="card-label">Overdue</div>
         <div class="card-count">{{ summary.overdueCount }} POs</div>
       </div>
-    </div>
-  </div>
+    </div>-->
+  </div> 
 
   <!-- Filters -->
   <div class="filters-section" *ngIf="!isLoading && purchaseOrders.length > 0">
@@ -50,10 +50,10 @@
         <input type="date" [(ngModel)]="filterDateFrom" (change)="filterPurchaseOrders()">
       </div>
       
-      <div class="filter-group">
+      <!-- <div class="filter-group">
         <label>To Date:</label>
         <input type="date" [(ngModel)]="filterDateTo" (change)="filterPurchaseOrders()">
-      </div>
+      </div> -->
       
       <div class="filter-group">
         <label>Search:</label>
@@ -77,6 +77,8 @@
         <tr>
           <th>PO Number</th>
           <th>Vendor ID</th>
+          <th>Material Number</th>
+          <th>Unit of Measure</th>
           <th>PO Date</th>
           <th>Expected Delivery</th>
           <th>Currency</th>
@@ -86,6 +88,8 @@
         <tr *ngFor="let po of filteredPurchaseOrders">
           <td class="po-number">{{ po.poNumber }}</td>
           <td>{{ po.vendorId }}</td>
+          <td>{{ po.matnr }}</td>
+          <td>{{ po.meins }}</td>
           <td>{{ formatDate(po.poDate) }}</td>
           <td>{{ formatDate(po.edd) }}</td>
           <td class="currency">{{ po.currency }}</td>

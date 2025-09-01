@@ -83,56 +83,18 @@
       </div>
     </div>
 
-    <!-- Filter Buttons -->
-    <div class="filter-section">
+    <!-- Payment Details Section -->
+    <div class="details-section">
       <h2 class="section-title">Payment Details</h2>
-      <div class="filter-buttons">
-        <button 
-          class="filter-btn" 
-          [class.active]="selectedFilter === 'all'"
-          (click)="setFilter('all')">
-          All Records
-        </button>
-        <button 
-          class="filter-btn" 
-          [class.active]="selectedFilter === 'current'"
-          (click)="setFilter('current')">
-          Current
-        </button>
-        <button 
-          class="filter-btn" 
-          [class.active]="selectedFilter === '30days'"
-          (click)="setFilter('30days')">
-          1-30 Days
-        </button>
-        <button 
-          class="filter-btn" 
-          [class.active]="selectedFilter === '60days'"
-          (click)="setFilter('60days')">
-          31-60 Days
-        </button>
-        <button 
-          class="filter-btn" 
-          [class.active]="selectedFilter === '90days'"
-          (click)="setFilter('90days')">
-          61-90 Days
-        </button>
-        <button 
-          class="filter-btn" 
-          [class.active]="selectedFilter === 'overdue'"
-          (click)="setFilter('overdue')">
-          90+ Days Overdue
-        </button>
-      </div>
     </div>
 
     <!-- Data Table -->
     <div class="table-section">
       <div class="table-info">
-        <span class="record-count">Showing {{ getFilteredData().length }} of {{ paymentData.length }} records</span>
+        <span class="record-count">Showing {{ paymentData.length }} records</span>
       </div>
       
-      <div class="table-container" *ngIf="getFilteredData().length > 0; else noDataTemplate">
+      <div class="table-container" *ngIf="paymentData.length > 0; else noDataTemplate">
         <table class="payment-table">
           <thead>
             <tr>
@@ -141,24 +103,29 @@
               <th>Posting Date</th>
               <th>Document Date</th>
               <th>Currency</th>
+              <!-- <th>Tax Code</th> -->
               <th>Amount</th>
-              <!-- <th>Due Date</th> -->
+              <th>Baseline Date</th>
+              <!-- <th>Payment Terms</th> -->
+              <th>Due Date</th>
               <th>Aging Days</th>
               <th>Status</th>
-              <!-- <th>Payment Terms</th> -->
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let item of getFilteredData(); trackBy: trackByDocumentNumber" 
+            <tr *ngFor="let item of paymentData; trackBy: trackByDocumentNumber" 
                 class="table-row">
               <td class="vendor-id">{{ item.vendorId }}</td>
               <td class="document-number">{{ item.documentNumber }}</td>
-              <td class="posting-date">{{ item.postingDate | date:'dd/MM/yyyy' }}</td>
-              <td class="document-date">{{ item.documentDate | date:'dd/MM/yyyy' }}</td>
+              <td class="posting-date">{{ item.postingDate }}</td>
+              <td class="document-date">{{ item.documentDate }}</td>
               <td class="currency">{{ item.currency }}</td>
+              <!-- <td class="tax-code">{{ item.taxCode || '-' }}</td> -->
               <td class="amount">{{ formatCurrency(item.amount, item.currency) }}</td>
-              <!-- <td class="due-date">{{ item.dueDate | date:'dd/MM/yyyy' }}</td> -->
-              <td class="aging-days" [class]="getStatusClass(item.status)" style="color: white;">
+              <td class="baseline-date">{{ item.baselineDate }}</td>
+              <!-- <td class="payment-terms">{{ item.paymentTerms || '-' }}</td> -->
+              <td class="due-date">{{ item.dueDate }}</td>
+              <td class="aging-days" [class]="getStatusClass(item.status)" style="color:aliceblue">
                 {{ item.agingDays }} days
               </td>
               <td class="status">
@@ -166,7 +133,6 @@
                   {{ item.status }}
                 </span>
               </td>
-              <!-- <td class="payment-terms">{{ item.paymentTerms }}</td> -->
             </tr>
           </tbody>
         </table>
@@ -178,7 +144,7 @@
           <div class="no-data-icon">📊</div>
           <h3>No Payment Data Found</h3>
           <p>No payment records match the selected filter criteria.</p>
-          <button class="refresh-btn" (click)="setFilter('all')">Show All Records</button>
+          <button class="refresh-btn" (click)="refreshData()">Refresh Data</button>
         </div>
       </ng-template>
     </div>

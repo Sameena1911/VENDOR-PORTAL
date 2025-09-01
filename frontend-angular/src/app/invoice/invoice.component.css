@@ -409,10 +409,35 @@
 }
 
 .no-data,
-.empty-state {
+.empty-state,
+.unauthorized-state {
   text-align: center;
   padding: 40px 20px;
   color: #666;
+}
+
+.unauthorized-state {
+  background-color: #FFF3E0;
+  border: 1px solid #FFB74D;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.unauthorized-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+}
+
+.unauthorized-state h3 {
+  color: #E65100;
+  margin: 10px 0;
+}
+
+.unauthorized-note {
+  font-size: 14px;
+  color: #BF360C;
+  font-style: italic;
+  margin-top: 10px;
 }
 
 .results-info {

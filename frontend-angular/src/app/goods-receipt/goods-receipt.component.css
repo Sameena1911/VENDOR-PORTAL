@@ -380,7 +380,9 @@
   .goods-receipt-table td {
     padding: 10px 8px;
   }
-  
+  /* .goods-receipt-table td{
+    text-align: center;
+  } */
   .description {
     max-width: 150px;
   }

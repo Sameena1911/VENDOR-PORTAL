@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AuthService } from '../services/auth.service';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 export interface CreditDebitMemo {
   vendorId: string;
@@ -168,13 +168,15 @@ export interface MemoSummary {
                   <tr>
                     <th>Type</th>
                     <th>Document #</th>
+                    <th>Fiscal Year</th>
                     <th>Doc Type</th>
                     <th>Posting Date</th>
                     <th>Amount</th>
-                    <th>Status</th>
+                    <th>Currency</th>
                     <th>Material</th>
                     <th>Quantity</th>
-                    <th>Description</th>
+                    <th>GL Account</th>
+                    <th>Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -185,15 +187,17 @@ export interface MemoSummary {
                       </span>
                     </td>
                     <td>{{ memo.documentNumber }}</td>
+                    <td>{{ memo.fiscalYear }}</td>
                     <td>{{ memo.documentType }}</td>
                     <td>{{ memo.postingDate }}</td>
                     <td class="amount" [ngClass]="{'debit-amount': memo.type === 'DEBIT', 'credit-amount': memo.type === 'CREDIT'}">
-                      {{ memo.amount | currency:'INR':'symbol':'1.2-2' }}
+                      {{ memo.amount | currency:memo.currency:'symbol':'1.2-2' }}
                     </td>
-                    <td>{{ memo.status }}</td>
+                    <td>{{ memo.currency }}</td>
                     <td>{{ memo.material || '-' }}</td>
                     <td>{{ memo.quantity > 0 ? (memo.quantity + ' ' + memo.unit) : '-' }}</td>
-                    <td>{{ memo.description }}</td>
+                    <td>{{ memo.glAccount || '-' }}</td>
+                    <td>{{ memo.status }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -205,25 +209,29 @@ export interface MemoSummary {
                 <thead>
                   <tr>
                     <th>Document #</th>
+                    <th>Fiscal Year</th>
                     <th>Doc Type</th>
                     <th>Posting Date</th>
                     <th>Amount</th>
-                    <th>Status</th>
+                    <th>Currency</th>
                     <th>Material</th>
                     <th>Quantity</th>
-                    <th>Description</th>
+                    <th>GL Account</th>
+                    <th>Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr *ngFor="let memo of debitMemos">
                     <td>{{ memo.documentNumber }}</td>
+                    <td>{{ memo.fiscalYear }}</td>
                     <td>{{ memo.documentType }}</td>
                     <td>{{ memo.postingDate }}</td>
-                    <td class="amount debit-amount">{{ memo.amount | currency:'INR':'symbol':'1.2-2' }}</td>
-                    <td>{{ memo.status }}</td>
+                    <td class="amount debit-amount">{{ memo.amount | currency:memo.currency:'symbol':'1.2-2' }}</td>
+                    <td>{{ memo.currency }}</td>
                     <td>{{ memo.material || '-' }}</td>
                     <td>{{ memo.quantity > 0 ? (memo.quantity + ' ' + memo.unit) : '-' }}</td>
-                    <td>{{ memo.description }}</td>
+                    <td>{{ memo.glAccount || '-' }}</td>
+                    <td>{{ memo.status }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -238,25 +246,29 @@ export interface MemoSummary {
                 <thead>
                   <tr>
                     <th>Document #</th>
+                    <th>Fiscal Year</th>
                     <th>Doc Type</th>
                     <th>Posting Date</th>
                     <th>Amount</th>
-                    <th>Status</th>
+                    <th>Currency</th>
                     <th>Material</th>
                     <th>Quantity</th>
-                    <th>Description</th>
+                    <th>GL Account</th>
+                    <th>Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr *ngFor="let memo of creditMemos">
                     <td>{{ memo.documentNumber }}</td>
+                    <td>{{ memo.fiscalYear }}</td>
                     <td>{{ memo.documentType }}</td>
                     <td>{{ memo.postingDate }}</td>
-                    <td class="amount credit-amount">{{ memo.amount | currency:'INR':'symbol':'1.2-2' }}</td>
-                    <td>{{ memo.status }}</td>
+                    <td class="amount credit-amount">{{ memo.amount | currency:memo.currency:'symbol':'1.2-2' }}</td>
+                    <td>{{ memo.currency }}</td>
                     <td>{{ memo.material || '-' }}</td>
                     <td>{{ memo.quantity > 0 ? (memo.quantity + ' ' + memo.unit) : '-' }}</td>
-                    <td>{{ memo.description }}</td>
+                    <td>{{ memo.glAccount || '-' }}</td>
+                    <td>{{ memo.status }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -667,7 +679,7 @@ export class CreditDebitMemoComponent implements OnInit {
   debitColumns = ['documentNumber', 'documentType', 'postingDate', 'amount', 'status', 'material', 'quantity', 'description'];
   creditColumns = ['documentNumber', 'documentType', 'postingDate', 'amount', 'status', 'material', 'quantity', 'description'];
 
-  constructor(private authService: AuthService) {}
+  constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
     this.loadMemoData();
@@ -683,19 +695,38 @@ export class CreditDebitMemoComponent implements OnInit {
   async loadMemoDataAsync(): Promise<void> {
     try {
       console.log('Loading credit/debit memo data...');
-      const response = await this.authService.makeRequest('/vendor/credit-debit-memo', 'GET');
-      console.log('Credit/Debit Memo API Response:', response);
       
-      this.debitMemos = response.debitMemos || [];
-      this.creditMemos = response.creditMemos || [];
-      this.allMemos = [...this.debitMemos, ...this.creditMemos];
-      this.summary = response.summary;
+      const token = localStorage.getItem('token');
+      const headers = new HttpHeaders({
+        'Authorization': `Bearer ${token}`
+      });
+      
+      const response = await this.http.get<any>('http://localhost:3001/api/vendor/credit-debit-memo', { headers }).toPromise();
+      console.log('Credit/Debit Memo API Response:', response);
+      console.log('Debit Memos:', response?.debitMemos);
+      console.log('Credit Memos:', response?.creditMemos);
+      console.log('Summary:', response?.summary);
+      
+      if (response && (response.debitMemos || response.creditMemos)) {
+        // Backend already separates debit and credit memos
+        this.debitMemos = response.debitMemos || [];
+        this.creditMemos = response.creditMemos || [];
+        
+        this.allMemos = [...this.debitMemos, ...this.creditMemos];
+        this.summary = response.summary;
+      } else {
+        this.debitMemos = [];
+        this.creditMemos = [];
+        this.allMemos = [];
+        this.summary = null;
+        this.error = response?.message || 'No credit/debit memo data found';
+      }
       
       this.applyFilters();
       this.loading = false;
     } catch (error: any) {
       console.error('Error loading credit/debit memo data:', error);
-      this.error = error.message || 'Failed to load credit/debit memo data';
+      this.error = error?.error?.message || 'Failed to load credit/debit memo data';
       this.loading = false;
     }
   }

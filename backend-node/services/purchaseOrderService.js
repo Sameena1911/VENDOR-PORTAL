@@ -97,6 +97,8 @@ async function fetchPurchaseOrders(vendorId) {
       purchaseOrders: poData.map(po => ({
         poNumber: po.PO_NUMBER || '',
         vendorId: po.VENDOR_ID || paddedVendorId,
+        matnr: po.MATNR || '',
+        meins: po.MEINS || '',
         poDate: formatSAPDate(po.PO_DATE),
         edd: formatSAPDate(po.EDD),  // Format the EDD date properly
         currency: po.CURRE || 'INR',  // Ensure currency defaults to INR

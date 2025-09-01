@@ -1,7 +1,7 @@
 <div class="invoice-container">
   <!-- Header -->
   <div class="page-header">
-    <h2>Invoice Management</h2>
+    <!-- <h2>Invoice Management</h2> -->
     <!-- <button class="btn btn-primary" (click)="refresh()" [disabled]="isLoading">
       <span *ngIf="isLoading">Loading...</span>
       <span *ngIf="!isLoading">Refresh</span>
@@ -140,6 +140,14 @@
   <div *ngIf="!isLoading && invoices.length === 0 && !error" class="empty-state">
     <p>No invoices found for your vendor account.</p>
     <button class="btn btn-primary" (click)="loadInvoices()">Reload</button>
+  </div>
+
+  <!-- Unauthorized Vendor State -->
+  <div *ngIf="!isLoading && error && error.includes('No invoices found for your vendor account')" class="unauthorized-state">
+    <div class="unauthorized-icon">🚫</div>
+    <h3>No Invoices Available</h3>
+    <p>No invoices found for your vendor account.</p>
+    <!-- <p class="unauthorized-note">Invoice access is restricted to authorized vendors only.</p> -->
   </div>
 
   <!-- Results Count -->

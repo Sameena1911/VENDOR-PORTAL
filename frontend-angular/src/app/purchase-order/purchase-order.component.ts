@@ -6,6 +6,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 interface PurchaseOrder {
   poNumber: string;
   vendorId: string;
+  matnr: string;
+  meins: string;
   poDate: string;
   edd: string;
   currency: string;

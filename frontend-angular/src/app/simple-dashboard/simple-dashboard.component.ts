@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { SidebarComponent } from '../components/sidebar/sidebar.component';
 import { VendorProfileComponent } from '../vendor-profile/vendor-profile.component';
 import { PaymentAgingReportsComponent } from '../payment-aging-reports/payment-aging-reports.component';
@@ -21,6 +22,7 @@ import { AuthService } from '../services';
 export class SimpleDashboardComponent implements OnInit {
   selectedMenu = 'dashboard';
   username: string = '';
+  vendorName: string = '';
   vendorInfo = {
     companyName: 'ABC Technologies Pvt Ltd',
     email: 'vendor@abctech.com',
@@ -28,11 +30,31 @@ export class SimpleDashboardComponent implements OnInit {
     address: 'Plot No. 123, Industrial Area, Bangalore - 560001'
   };
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private authService: AuthService, private router: Router, private http: HttpClient) {}
 
   ngOnInit() {
     const userInfo = this.authService.getUserInfo();
     this.username = userInfo?.vendorId || '0000100000';
+    this.loadVendorProfile();
+  }
+
+  async loadVendorProfile() {
+    try {
+      const token = localStorage.getItem('token');
+      const headers = new HttpHeaders({
+        'Authorization': `Bearer ${token}`
+      });
+      
+      const response = await this.http.get<any>('http://localhost:3001/api/vendor/profile', { headers }).toPromise();
+      
+      if (response && response.data && response.data.vendorName) {
+        this.vendorName = response.data.vendorName;
+        this.username = this.vendorName; // Use vendor name instead of ID
+      }
+    } catch (error) {
+      console.error('Error loading vendor profile:', error);
+      // Keep using vendor ID if profile fetch fails
+    }
   }
 
   onMenuSelect(action: string) {

@@ -82,6 +82,14 @@ export class InvoiceComponent implements OnInit {
     this.error = null;
 
     try {
+      // Check if current vendor is authorized to view invoices
+      if (!this.isAuthorizedVendor()) {
+        this.invoices = [];
+        this.filteredInvoices = [];
+        this.error = 'No invoices found for your vendor account';
+        return;
+      }
+
       const token = localStorage.getItem('token');
       if (!token) {
         throw new Error('No authentication token found');
@@ -109,6 +117,25 @@ export class InvoiceComponent implements OnInit {
       this.filteredInvoices = [];
     } finally {
       this.isLoading = false;
+    }
+  }
+
+  private isAuthorizedVendor(): boolean {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return false;
+      
+      // Decode JWT token to get vendor ID
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const vendorId = payload.vendorId;
+      
+      console.log('Current vendor ID:', vendorId);
+      
+      // Only allow vendor ID 0000100000 to view invoices
+      return vendorId === '0000100000';
+    } catch (error) {
+      console.error('Error checking vendor authorization:', error);
+      return false;
     }
   }
 

@@ -95,26 +95,31 @@
       <table class="payment-table">
         <thead>
           <tr>
+            <th>Vendor ID</th>
             <th>Document No.</th>
             <th>Posting Date</th>
             <th>Document Date</th>
             <th>Amount</th>
             <th>Currency</th>
+            <th>Tax Code</th>
             <th>Baseline Date</th>
+            <th>Payment Terms</th>
             <th>Due Date</th>
             <th>Aging Days</th>
             <th>Status</th>
-            <th>Payment Terms</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let item of getPaginatedData(); trackBy: trackByDocumentNumber" class="table-row">
+            <td>{{ item.vendorId }}</td>
             <td class="document-number">{{ item.documentNumber }}</td>
             <td>{{ item.postingDate }}</td>
             <td>{{ item.documentDate }}</td>
             <td class="amount">{{ formatCurrency(item.amount, item.currency) }}</td>
             <td class="currency">{{ item.currency }}</td>
+            <td>{{ item.taxCode || '-' }}</td>
             <td>{{ item.baselineDate }}</td>
+            <td class="payment-terms">{{ item.paymentTerms || '-' }}</td>
             <td>{{ item.dueDate }}</td>
             <td class="aging-days" [class]="getStatusClass(item.status)">{{ item.agingDays }}</td>
             <td>
@@ -122,7 +127,6 @@
                 {{ item.status }}
               </span>
             </td>
-            <td class="payment-terms">{{ item.paymentTerms }}</td>
           </tr>
         </tbody>
       </table>
